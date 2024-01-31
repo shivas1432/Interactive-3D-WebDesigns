@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glass Morphism Ski Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: url('1.jpg') center/cover no-repeat;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(15, 32, 74, 0.8) 0%, 
+                rgba(44, 62, 122, 0.7) 30%, 
+                rgba(88, 86, 214, 0.6) 60%, 
+                rgba(255, 94, 77, 0.5) 100%);
+            z-index: -1;
+        }
+
+        /* Particle System */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Glass morphism base styles */
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-transparent {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            box-shadow: 
+                0 4px 16px 0 rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: 100vh;
+            z-index: 2;
+            position: relative;
+        }
+
+        /* Crew Status Card */
+        .crew-status {
+            grid-row: 1 / 3;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            position: relative;
+        }
+
+        .crew-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 24px;
+            opacity: 1;
+            z-index: -1;
+        }
+
+        .crew-header {
+            color: rgba(255, 255, 255, 1);
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            position: relative;
+        }
+
+        .crew-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+            z-index: 10;
+            position: relative;
+        }
+
+        .crew-number {
+            font-size: 120px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 1);
+            line-height: 0.8;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
+            z-index: 10;
+            position: relative;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 40px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff5e4d;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            z-index: 10;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        /* Weather Card */
+        .weather-card {
+            padding: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 200px;
+        }
+
+        .weather-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        .weather-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .weather-icon-3d {
+            width: 32px;
+            height: 32px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .weather-text {
+            color: rgba(255, 255, 255, 1);
+            font-size: 16px;
+            font-weight: 500;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .weather-3d-scene {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 80px;
+            z-index: 5;
+        }
+
+        .cloud-3d {
+            position: absolute;
+            border-radius: 50px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(255, 255, 255, 0.7) 50%, 
+                rgba(200, 220, 255, 0.8) 100%);
+            box-shadow: 
+                0 8px 16px rgba(0, 0, 0, 0.2),
+                inset 0 2px 4px rgba(255, 255, 255, 0.5),
+                0 0 20px rgba(255, 255, 255, 0.3);
+            animation: float-cloud 6s ease-in-out infinite;
+        }
+
+        .cloud-main {
+            width: 60px;
+            height: 30px;
+            top: 25px;
+            left: 30px;
+        }
+
+        .cloud-main::before {
+            content: '';
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: inherit;
+            border-radius: 50%;
+            top: -15px;
+            left: 5px;
+            box-shadow: inherit;
+        }
+
+        .cloud-main::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: inherit;
+            border-radius: 50%;
+            top: -10px;
+            right: 5px;
+            box-shadow: inherit;
+        }
+
+        .cloud-small {
+            width: 40px;
+            height: 20px;
+            top: 35px;
+            left: 10px;
+            opacity: 0.8;
+            animation-delay: -2s;
+        }
+
+        .cloud-small::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: inherit;
+            border-radius: 50%;
+            top: -8px;
+            left: 8px;
+            box-shadow: inherit;
+        }
+
+        .snow-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .snowflake {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            animation: snowfall 3s linear infinite;
+        }
+
+        @keyframes float-cloud {
+            0%, 100% { 
+                transform: translateY(0px) scale(1);
+            }
+            50% { 
+                transform: translateY(-8px) scale(1.05);
+            }
+        }
+
+        @keyframes snowfall {
+            0% {
+                transform: translateY(-10px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .weather-details {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .temp-main {
+            font-size: 32px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 1);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .weather-condition {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .weather-stats {
+            text-align: right;
+        }
+
+        .humidity {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Progress Card */
+        .progress-card {
+            padding: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .progress-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 24px;
+            opacity: 1;
+            z-index: -1;
+        }
+
+        .progress-total {
+            text-align: right;
+            margin-bottom: 20px;
+            z-index: 10;
+            position: relative;
+        }
+
+        .progress-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            position: relative;
+        }
+
+        .progress-number {
+            font-size: 48px;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 1);
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
+            z-index: 10;
+            position: relative;
+        }
+
+        .achievements {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .achievement {
+            width: 50px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .achievement:first-child {
+            border-color: #ff5e4d;
+            color: #ff5e4d;
+        }
+
+        .route-section {
+            margin-top: auto;
+        }
+
+        .route-title {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .route-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .route-chart {
+            display: flex;
+            align-items: end;
+            gap: 3px;
+            height: 30px;
+        }
+
+        .chart-bar {
+            background: rgba(255, 255, 255, 0.3);
+            width: 3px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            background: #ff5e4d;
+        }
+
+        /* AI Assistant */
+        .ai-assistant {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 25, 45, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .ai-icon {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at 30% 30%, #4a5568, #2d3748, #1a202c);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 24px;
+            height: 24px;
+            border: 2px solid transparent;
+            border-top: 2px solid rgba(255, 255, 255, 0.6);
+            border-right: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: spin 3s linear infinite;
+        }
+
+        .ai-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            border: 1px solid transparent;
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: spin 2s linear infinite reverse;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .ai-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 400;
+            white-space: nowrap;
+        }
+
+        .explore-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 25px;
+            padding: 8px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .explore-btn::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.6);
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z'/%3E%3Cpolyline points='22,6 12,13 2,6'/%3E%3C/svg%3E") no-repeat center;
+            mask-size: contain;
+        }
+
+        .explore-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .crew-status {
+                grid-row: auto;
+            }
+            
+            .crew-number {
+                font-size: 80px;
+            }
+            
+            .ai-assistant {
+                position: relative;
+                left: auto;
+                bottom: auto;
+                transform: none;
+                margin: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background removed -->
+
+    <!-- Particle System -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <!-- Crew Status Card -->
+        <div class="glass crew-status">
+            <video class="crew-video" autoplay muted loop>
+                <source src="2.mp4" type="video/mp4">
+            </video>
+            <div class="crew-header">Crew Status</div>
+            <div class="crew-subtitle">HIGH QUALITY EPIC</div>
+            <div class="crew-number">4/6</div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <div class="status-text">Ready</div>
+            </div>
+            <div class="settings-btn">⚙</div>
+        </div>
+
+        <!-- Weather Card -->
+        <div class="glass-transparent weather-card">
+            <div class="weather-content">
+                <div class="weather-header">
+                    <div class="weather-icon-3d">
+                        <div class="snow-icon-3d">
+                            <div class="snow-crystal"></div>
+                        </div>
+                    </div>
+                    <div class="weather-text">-34°C / Light Snow</div>
+                </div>
+            </div>
+            
+            <div class="weather-3d-scene">
+                <div class="cloud-3d cloud-main"></div>
+                <div class="cloud-3d cloud-small"></div>
+            </div>
+            
+            <div class="snow-particles">
+                <div class="snowflake" style="left: 20%; animation-delay: 0s;">❄</div>
+                <div class="snowflake" style="left: 40%; animation-delay: 0.5s;">❅</div>
+                <div class="snowflake" style="left: 60%; animation-delay: 1s;">❄</div>
+                <div class="snowflake" style="left: 80%; animation-delay: 1.5s;">❅</div>
+                <div class="snowflake" style="left: 30%; animation-delay: 2s;">❄</div>
+                <div class="snowflake" style="left: 70%; animation-delay: 2.5s;">❅</div>
+            </div>
+            
+            <div class="weather-details">
+                <div>
+                    <div class="temp-main">-34°</div>
+                    <div class="weather-condition">Light Snow</div>
+                </div>
+                <div class="weather-stats">
+                    <div class="humidity">Humidity 78%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="glass progress-card">
+            <video class="progress-video" autoplay muted loop>
+                <source src="3.mp4" type="video/mp4">
+            </video>
+            <div class="progress-total">
+                <div class="progress-label">TOTAL</div>
+                <div class="progress-number">62%</div>
+            </div>
+            
+            <div class="progress-label" style="margin-bottom: 10px;">ACHIEVEMENT</div>
+            <div class="achievements">
+                <div class="achievement">⭐</div>
+                <div class="achievement">🏆</div>
+            </div>
+
+            <div class="route-section">
+                <div class="route-title">Today's Route</div>
+                <div class="route-stats">
+                    <span>18% THIS WEEK</span>
+                    <div class="route-chart">
+                        <div class="chart-bar" style="height: 60%;"></div>
+                        <div class="chart-bar" style="height: 80%;"></div>
+                        <div class="chart-bar" style="height: 40%;"></div>
+                        <div class="chart-bar" style="height: 90%;"></div>
+                        <div class="chart-bar" style="height: 70%;"></div>
+                        <div class="chart-bar" style="height: 100%;"></div>
+                        <div class="chart-bar" style="height: 30%;"></div>
+                    </div>
+                    <span>+1,200 M</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant -->
+    <div class="ai-assistant">
+        <div class="ai-icon"></div>
+        <div class="ai-text">Just Ask, I'll Handle the Web...</div>
+        <div class="explore-btn">Explore</div>
+    </div>
+
+    <script>
+        // Particle System
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Random size between 2-8px
+            const size = Math.random() * 6 + 2;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            
+            // Random horizontal position
+            particle.style.left = Math.random() * 100 + '%';
+            
+            // Random animation duration between 8-15 seconds
+            const duration = Math.random() * 7 + 8;
+            particle.style.animationDuration = duration + 's';
+            
+            // Random delay
+            const delay = Math.random() * 5;
+            particle.style.animationDelay = delay + 's';
+            
+            // Random horizontal drift
+            const drift = (Math.random() - 0.5) * 100;
+            particle.style.setProperty('--drift', drift + 'px');
+            
+            document.getElementById('particles').appendChild(particle);
+            
+            // Remove particle after animation
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.parentNode.removeChild(particle);
+                }
+            }, (duration + delay) * 1000);
+        }
+
+        // Create particles continuously
+        function startParticleSystem() {
+            createParticle();
+            setTimeout(startParticleSystem, Math.random() * 500 + 200);
+        }
+
+        // Enhanced particle animation with drift
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float {
+                0% {
+                    transform: translateY(100vh) translateX(0) rotate(0deg);
+                    opacity: 0;
+                }
+                10% {
+                    opacity: 1;
+                }
+                50% {
+                    transform: translateY(50vh) translateX(var(--drift, 0)) rotate(180deg);
+                }
+                90% {
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(-10vh) translateX(var(--drift, 0)) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Start the particle system
+        startParticleSystem();
+
+        // Interactive elements
+        document.querySelector('.settings-btn').addEventListener('click', function() {
+            this.style.transform = 'rotate(180deg) scale(1.1)';
+            setTimeout(() => {
+                this.style.transform = 'rotate(0deg) scale(1)';
+            }, 300);
+        });
+
+        // Chart bars hover effect
+        document.querySelectorAll('.chart-bar').forEach(bar => {
+            bar.addEventListener('mouseenter', function() {
+                this.style.background = '#ff5e4d';
+                this.style.transform = 'scaleY(1.2)';
+            });
+            
+            bar.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(255, 255, 255, 0.3)';
+                this.style.transform = 'scaleY(1)';
+            });
+        });
+
+        // AI Assistant interaction
+        document.querySelector('.ai-assistant').addEventListener('click', function() {
+            const aiIcon = this.querySelector('.ai-icon');
+            aiIcon.style.transform = 'scale(1.2) rotate(360deg)';
+            setTimeout(() => {
+                aiIcon.style.transform = 'scale(1) rotate(0deg)';
+            }, 500);
+        });
+
+        // Smooth glass card hover effects
+        document.querySelectorAll('.glass').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 20px 40px 0 rgba(31, 38, 135, 0.5)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 8px 32px 0 rgba(31, 38, 135, 0.37)';
+            });
+        });
+
+        // Dynamic number animations
+        function animateNumber(element, target, duration = 2000) {
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.floor(current) + (target === 62 ? '%' : '');
+            }, 16);
+        }
+
+        // Animate the progress number on page load
+        setTimeout(() => {
+            const progressNumber = document.querySelector('.progress-number');
+            animateNumber(progressNumber, 62);
+        }, 1000);
+
+        // Add subtle breathing animation to glass elements
+        setInterval(() => {
+            document.querySelectorAll('.glass').forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0.95';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                    }, 1000);
+                }, index * 500);
+            });
+        }, 8000);
+    </script>
+</body>
+</html>

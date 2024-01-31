@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Hover Menu Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .menu-container {
+            transform-style: preserve-3d;
+            transform: rotateX(-10deg) rotateY(15deg);
+            transition: transform 0.6s ease;
+        }
+
+        .menu-container:hover {
+            transform: rotateX(-5deg) rotateY(10deg);
+        }
+
+        .menu-block {
+            width: 200px;
+            height: 60px;
+            position: relative;
+            margin: 2px 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        /* Hover effects - different directions */
+        .menu-block:nth-child(odd):hover {
+            transform: translateX(-30px) translateZ(10px);
+        }
+
+        .menu-block:nth-child(even):hover {
+            transform: translateX(30px) translateZ(10px);
+        }
+
+        .menu-item {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.4s ease;
+            z-index: 1;
+        }
+
+        /* Default state - all same dark color */
+        .menu-item.front {
+            background: #34495e;
+            color: #ecf0f1 !important;
+            transform: translateZ(30px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            border: 1px solid #4a5f7a;
+            z-index: 5;
+        }
+
+        .menu-item.back {
+            background: #2c3e50;
+            transform: translateZ(-30px);
+        }
+
+        .menu-item.right {
+            background: #2c3e50;
+            width: 60px;
+            transform: rotateY(90deg) translateZ(30px);
+            right: 0;
+        }
+
+        .menu-item.left {
+            background: #1a252f;
+            width: 60px;
+            transform: rotateY(-90deg) translateZ(30px);
+            left: 0;
+        }
+
+        .menu-item.top {
+            background: #3c5a78;
+            height: 60px;
+            transform: rotateX(90deg) translateZ(30px);
+            top: 0;
+        }
+
+        .menu-item.bottom {
+            background: #1a252f;
+            height: 60px;
+            transform: rotateX(-90deg) translateZ(30px);
+            bottom: 0;
+        }
+
+        /* Hover state - blue highlight */
+        .menu-block:hover .menu-item.front {
+            background: #3498db;
+            color: white !important;
+            box-shadow: 0 0 40px rgba(52, 152, 219, 0.6);
+            border: 1px solid #5dade2;
+            z-index: 10;
+        }
+
+        .menu-block:hover .menu-item.right,
+        .menu-block:hover .menu-item.left,
+        .menu-block:hover .menu-item.back {
+            background: #2980b9;
+        }
+
+        .menu-block:hover .menu-item.top {
+            background: #5dade2;
+        }
+
+        .menu-block:hover .menu-item.bottom {
+            background: #1b4f72;
+        }
+
+        /* Active state animation */
+        .menu-block.active {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translateZ(0) scale(1); }
+            50% { transform: translateZ(15px) scale(1.02); }
+        }
+
+        /* Enhanced 3D effect on hover */
+        .menu-block:hover {
+            filter: brightness(1.1);
+        }
+
+        /* Smooth transitions for all transforms */
+        .menu-block {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                       filter 0.3s ease;
+        }
+
+        /* Individual menu items styling */
+        .menu-block[data-menu="home"]:hover {
+            transform: translateX(-35px) translateZ(15px) rotateY(-5deg);
+        }
+
+        .menu-block[data-menu="about"]:hover {
+            transform: translateX(35px) translateZ(15px) rotateY(5deg);
+        }
+
+        .menu-block[data-menu="services"]:hover {
+            transform: translateX(-35px) translateZ(15px) rotateY(-5deg);
+        }
+
+        .menu-block[data-menu="portfolio"]:hover {
+            transform: translateX(35px) translateZ(15px) rotateY(5deg);
+        }
+
+        .menu-block[data-menu="team"]:hover {
+            transform: translateX(-35px) translateZ(15px) rotateY(-5deg);
+        }
+
+        .menu-block[data-menu="contact"]:hover {
+            transform: translateX(35px) translateZ(15px) rotateY(5deg);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .menu-container {
+                transform: rotateX(-5deg) rotateY(10deg) scale(0.8);
+            }
+            
+            .menu-block {
+                width: 180px;
+                height: 50px;
+            }
+            
+            .menu-item {
+                font-size: 12px;
+            }
+
+            .menu-block[data-menu]:hover {
+                transform: translateX(-20px) translateZ(10px) rotateY(-3deg);
+            }
+
+            .menu-block[data-menu="about"]:hover,
+            .menu-block[data-menu="portfolio"]:hover,
+            .menu-block[data-menu="contact"]:hover {
+                transform: translateX(20px) translateZ(10px) rotateY(3deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <div class="menu-block" data-menu="home">
+            <div class="menu-item front">Home</div>
+            <div class="menu-item back"></div>
+            <div class="menu-item right"></div>
+            <div class="menu-item left"></div>
+            <div class="menu-item top"></div>
+            <div class="menu-item bottom"></div>
+        </div>
+
+        <div class="menu-block" data-menu="about">
+            <div class="menu-item front">About</div>
+            <div class="menu-item back"></div>
+            <div class="menu-item right"></div>
+            <div class="menu-item left"></div>
+            <div class="menu-item top"></div>
+            <div class="menu-item bottom"></div>
+        </div>
+
+        <div class="menu-block" data-menu="services">
+            <div class="menu-item front">Services</div>
+            <div class="menu-item back"></div>
+            <div class="menu-item right"></div>
+            <div class="menu-item left"></div>
+            <div class="menu-item top"></div>
+            <div class="menu-item bottom"></div>
+        </div>
+
+        <div class="menu-block" data-menu="portfolio">
+            <div class="menu-item front">Portfolio</div>
+            <div class="menu-item back"></div>
+            <div class="menu-item right"></div>
+            <div class="menu-item left"></div>
+            <div class="menu-item top"></div>
+            <div class="menu-item bottom"></div>
+        </div>
+
+        <div class="menu-block" data-menu="team">
+            <div class="menu-item front">Our Team</div>
+            <div class="menu-item back"></div>
+            <div class="menu-item right"></div>
+            <div class="menu-item left"></div>
+            <div class="menu-item top"></div>
+            <div class="menu-item bottom"></div>
+        </div>
+
+        <div class="menu-block" data-menu="contact">
+            <div class="menu-item front">Contact</div>
+            <div class="menu-item back"></div>
+            <div class="menu-item right"></div>
+            <div class="menu-item left"></div>
+            <div class="menu-item top"></div>
+            <div class="menu-item bottom"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuBlocks = document.querySelectorAll('.menu-block');
+            
+            menuBlocks.forEach(block => {
+                block.addEventListener('click', function() {
+                    // Remove active class from all blocks
+                    menuBlocks.forEach(b => b.classList.remove('active'));
+                    
+                    // Add active class to clicked block
+                    this.classList.add('active');
+                    
+                    // Get menu item name
+                    const menuItem = this.getAttribute('data-menu');
+                    console.log(`Clicked on: ${menuItem}`);
+                    
+                    // Add pulse animation
+                    setTimeout(() => {
+                        this.classList.remove('active');
+                    }, 2000);
+                });
+                
+                // Enhanced hover effects
+                block.addEventListener('mouseenter', function() {
+                    // Add slight rotation and glow effect
+                    this.style.filter = 'brightness(1.1) drop-shadow(0 0 20px rgba(52, 152, 219, 0.3))';
+                });
+                
+                block.addEventListener('mouseleave', function() {
+                    this.style.filter = 'brightness(1)';
+                });
+            });
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                const currentActive = document.querySelector('.menu-block.active');
+                let nextBlock = null;
+                
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    
+                    if (!currentActive) {
+                        nextBlock = menuBlocks[0];
+                    } else {
+                        const currentIndex = Array.from(menuBlocks).indexOf(currentActive);
+                        if (e.key === 'ArrowDown') {
+                            nextBlock = menuBlocks[currentIndex + 1] || menuBlocks[0];
+                        } else {
+                            nextBlock = menuBlocks[currentIndex - 1] || menuBlocks[menuBlocks.length - 1];
+                        }
+                    }
+                    
+                    if (nextBlock) {
+                        menuBlocks.forEach(b => b.classList.remove('active'));
+                        nextBlock.classList.add('active');
+                        
+                        // Simulate hover effect
+                        nextBlock.style.filter = 'brightness(1.1) drop-shadow(0 0 20px rgba(52, 152, 219, 0.3))';
+                        setTimeout(() => {
+                            nextBlock.style.filter = 'brightness(1)';
+                            nextBlock.classList.remove('active');
+                        }, 2000);
+                    }
+                }
+                
+                if (e.key === 'Enter' && currentActive) {
+                    currentActive.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
