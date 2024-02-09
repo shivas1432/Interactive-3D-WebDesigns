@@ -1,3 +1,4 @@
+﻿// 3D Interactive Scene | Created by Shivashankar
 
 
 // Extend the base functionality of JavaScript
@@ -284,7 +285,7 @@ function animate(timestamp) {
 // Returns the platform the stick hit (if it didn't hit any stick then return undefined)
 function thePlatformTheStickHits() {
   if (sticks.last().rotation != 90)
-    throw Error(`Stick is ${sticks.last().rotation}°`);
+    throw Error(`Stick is ${sticks.last().rotation}Â°`);
   const stickFarX = sticks.last().x + sticks.last().length;
 
   const platformTheStickHits = platforms.find(
@@ -512,3 +513,4 @@ function getTreeY(x, baseHeight, amplitude) {
   const sineBaseY = window.innerHeight - baseHeight;
   return Math.sinus(x) * amplitude + sineBaseY;
 }
+

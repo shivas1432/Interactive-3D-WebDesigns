@@ -1,3 +1,4 @@
+﻿// 3D Interactive Scene | Created by Shivashankar
 console.clear();
 
 Splitting({ target: '.planet-title h1', by: 'chars' });
@@ -161,3 +162,4 @@ elTspans.forEach( (tspan,i) => {
   });
   
 });
+

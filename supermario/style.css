@@ -1,3 +1,4 @@
+﻿/* 3D Scene Styling | Designer: Shivashankar */
 
 :root {
     --pixel-size: calc(100vw / (25*16));
@@ -305,3 +306,4 @@
 93% { left: calc(100vw - (var(--pixel-size) * 16)); } 
 100% { left:  calc(92.99vw - (var(--pixel-size) * 16)); } 
 }
+
