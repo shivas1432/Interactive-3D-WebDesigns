@@ -1,3 +1,4 @@
+﻿// Enhanced 3D graphics and shaders
 var rotateDiv = document.getElementById('rot');
 var rotateIcons = document.getElementById('rot-icons');
 var clickRotateDiv = document.getElementById('click-rot');
@@ -40,10 +41,10 @@ toggles.forEach(function(toggle) {
     var tempValue = parseFloat(tempElement.textContent);
     if (this.id === 'toggle-cel') {
       var celsius = Math.round((tempValue - 32) * 5 / 9);
-      tempElement.textContent = celsius + '°C';
+      tempElement.textContent = celsius + 'Â°C';
     } else if (this.id === 'toggle-far') {
       var fahrenheit = Math.round(tempValue * 9 / 5 + 32);
-      tempElement.textContent = fahrenheit + '°F';
+      tempElement.textContent = fahrenheit + 'Â°F';
     }
   });
 });
@@ -56,9 +57,9 @@ function easeInOutCubic(t) {
 }
 
 function changeTemp(element, newTemp) {
-  let unit = element.innerHTML.includes("F") ? "°F" : "°C";
-  let currentTemp = unit === "°F" ? currentTempF : Math.round((currentTempF - 32) * 5 / 9);
-  let finalTemp = unit === "°F" ? newTemp : Math.round((newTemp - 32) * 5 / 9);
+  let unit = element.innerHTML.includes("F") ? "Â°F" : "Â°C";
+  let currentTemp = unit === "Â°F" ? currentTempF : Math.round((currentTempF - 32) * 5 / 9);
+  let finalTemp = unit === "Â°F" ? newTemp : Math.round((newTemp - 32) * 5 / 9);
 
   let duration = 2000; // Duration of the animation in milliseconds
   let startTime = null;
