@@ -1,4 +1,5 @@
 ﻿/* Mobile-optimized 3D styling */
+/* Mobile-optimized 3D styling */
 /* Copyright (c) 2025 by Site Studio (https://codepen.io/sitestudioapp/pen/emYLMxX) */
 body { 
   margin: 0; 
@@ -27,3 +28,4 @@ body {
 
 /* Style from the original div, though opacity might be controlled by JS */
 .webgl { opacity: 1; }
+
