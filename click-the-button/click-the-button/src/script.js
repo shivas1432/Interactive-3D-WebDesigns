@@ -1,4 +1,5 @@
-﻿// Enhanced 3D graphics and shaders
+﻿// Advanced 3D physics and VR support
+// Enhanced 3D graphics and shaders
 // Enhanced 3D graphics and shaders
 const { useState, useRef, useEffect, useLayoutEffect, createContext } = React;
 
@@ -275,5 +276,6 @@ const Grabber = ({ state, gameOver, extended, onCursorGrabbed }) => {
 
 // Render app
 ReactDOM.render(<App />, document.getElementById("app"));
+
 
 

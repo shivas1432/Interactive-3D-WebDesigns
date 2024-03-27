@@ -1,3 +1,4 @@
+﻿<!-- VR-ready 3D experience -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -211,7 +212,7 @@
         }
 
         .humidity-indicator::before {
-            content: '💧';
+            content: 'ðŸ’§';
             position: absolute;
             left: -20px;
             top: 50%;
@@ -252,7 +253,7 @@
             <div class="weather-widget relative text-white rounded-3xl p-6 overflow-hidden">
                 <div id="cloud-container" class="cloud-container absolute top-0 right-0 w-36 h-36 sm:w-40 sm:h-40 z-30 cursor-pointer">
                     <div id="cloud-tooltip" class="tooltip absolute top-20 right-2 sm:top-24 sm:right-4 text-white px-3 py-1.5 rounded-md text-xs opacity-0 transition-opacity duration-300 pointer-events-none z-40 shadow-lg">
-                        Click clouds for rain! ☔
+                        Click clouds for rain! â˜”
                         <div class="absolute -top-1 right-3 w-3 h-3 bg-black/80 transform rotate-45"></div>
                     </div>
                 </div>
@@ -261,9 +262,9 @@
                     <div class="date-time text-sm font-light opacity-90 mb-2 tracking-wide animate-fadeInUp" id="dateTime">Thursday, 09:24</div>
 
                     <div class="current-weather flex items-center mb-3">
-                        <div class="weather-icon-main text-6xl mr-4">⛅</div>
+                        <div class="weather-icon-main text-6xl mr-4">â›…</div>
                         <div class="temp text-6xl font-semibold">
-                            <span class="temperature-glow bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-white animate-fadeInScaleUp delay-100" id="temperature">8°C</span>
+                            <span class="temperature-glow bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-white animate-fadeInScaleUp delay-100" id="temperature">8Â°C</span>
                         </div>
                     </div>
 
@@ -271,7 +272,7 @@
 
                     <div class="sun-info glass-panel rounded-2xl p-4 flex justify-between items-center mb-5 animate-fadeInUp delay-300">
                         <div class="sunrise text-center">
-                            <div class="sun-icon text-2xl mb-2">🌅</div>
+                            <div class="sun-icon text-2xl mb-2">ðŸŒ…</div>
                             <div class="text-xs opacity-85 font-medium" id="sunriseTime">6:14 AM</div>
                         </div>
                         <div class="day-length text-center">
@@ -279,14 +280,14 @@
                             <div class="text-xs opacity-75 mt-1">Daylight</div>
                         </div>
                         <div class="sunset text-center">
-                            <div class="sun-icon text-2xl mb-2">🌇</div>
+                            <div class="sun-icon text-2xl mb-2">ðŸŒ‡</div>
                             <div class="text-xs opacity-85 font-medium" id="sunsetTime">5:56 PM</div>
                         </div>
                     </div>
 
                     <div class="precipitation glass-panel precipitation-active rounded-xl p-4 flex items-center justify-between mb-5 animate-fadeInUp delay-400">
                         <div class="flex items-center">
-                            <div class="precip-icon text-3xl mr-3 text-blue-300 drop-shadow-lg animate-gentleBob">🌧️</div>
+                            <div class="precip-icon text-3xl mr-3 text-blue-300 drop-shadow-lg animate-gentleBob">ðŸŒ§ï¸</div>
                             <div>
                                 <div class="text-sm opacity-95 font-medium" id="precipitationChance">Rain 85%</div>
                                 <div class="text-xs opacity-75">Heavy shower expected</div>
@@ -301,7 +302,7 @@
                     <div class="humidity-wind glass-panel rounded-xl p-4 flex justify-between text-sm opacity-95 mb-6 animate-fadeInUp delay-500">
                         <div class="humidity-indicator relative" id="humidity">
                             <div class="font-medium">Humidity</div>
-                            <div class="text-xs opacity-75">68% • Feels muggy</div>
+                            <div class="text-xs opacity-75">68% â€¢ Feels muggy</div>
                         </div>
                         <div class="wind-indicator relative" id="windSpeed">
                             <div class="font-medium">Wind</div>
@@ -312,27 +313,27 @@
                     <div class="forecast flex flex-nowrap justify-between gap-2 pb-2">
                         <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-500">
                             <div class="day-name text-xs font-medium mb-2 opacity-85">Today</div>
-                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">⛅</div>
-                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">8°</div>
-                            <div class="low-temp text-xs opacity-70">2°</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">â›…</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">8Â°</div>
+                            <div class="low-temp text-xs opacity-70">2Â°</div>
                         </div>
                         <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-600">
                             <div class="day-name text-xs font-medium mb-2 opacity-85">Fri</div>
-                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">🌧️</div>
-                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">7°</div>
-                            <div class="low-temp text-xs opacity-70">1°</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">ðŸŒ§ï¸</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">7Â°</div>
+                            <div class="low-temp text-xs opacity-70">1Â°</div>
                         </div>
                         <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-700">
                             <div class="day-name text-xs font-medium mb-2 opacity-85">Sat</div>
-                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">🌧️</div>
-                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">6°</div>
-                            <div class="low-temp text-xs opacity-70">0°</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">ðŸŒ§ï¸</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">6Â°</div>
+                            <div class="low-temp text-xs opacity-70">0Â°</div>
                         </div>
                         <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-800">
                             <div class="day-name text-xs font-medium mb-2 opacity-85">Sun</div>
-                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">☀️</div>
-                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-yellow-100 mb-1">9°</div>
-                            <div class="low-temp text-xs opacity-70">2°</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">â˜€ï¸</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-yellow-100 mb-1">9Â°</div>
+                            <div class="low-temp text-xs opacity-70">2Â°</div>
                         </div>
                     </div>
                 </div>
@@ -696,12 +697,12 @@
             ];
             
             const weatherConditions = [
-                { icon: '☀️', temp: Math.floor(Math.random() * 15 + 20), desc: 'Sunny', rain: 0 },
-                { icon: '⛅', temp: Math.floor(Math.random() * 10 + 15), desc: 'Partly Cloudy', rain: Math.floor(Math.random() * 20) },
-                { icon: '🌧️', temp: Math.floor(Math.random() * 8 + 8), desc: 'Rainy', rain: Math.floor(Math.random() * 60 + 40) },
-                { icon: '⛈️', temp: Math.floor(Math.random() * 6 + 12), desc: 'Stormy', rain: Math.floor(Math.random() * 40 + 60) },
-                { icon: '🌨️', temp: Math.floor(Math.random() * 8 - 2), desc: 'Snowy', rain: 0 },
-                { icon: '🌫️', temp: Math.floor(Math.random() * 10 + 10), desc: 'Foggy', rain: Math.floor(Math.random() * 30) }
+                { icon: 'â˜€ï¸', temp: Math.floor(Math.random() * 15 + 20), desc: 'Sunny', rain: 0 },
+                { icon: 'â›…', temp: Math.floor(Math.random() * 10 + 15), desc: 'Partly Cloudy', rain: Math.floor(Math.random() * 20) },
+                { icon: 'ðŸŒ§ï¸', temp: Math.floor(Math.random() * 8 + 8), desc: 'Rainy', rain: Math.floor(Math.random() * 60 + 40) },
+                { icon: 'â›ˆï¸', temp: Math.floor(Math.random() * 6 + 12), desc: 'Stormy', rain: Math.floor(Math.random() * 40 + 60) },
+                { icon: 'ðŸŒ¨ï¸', temp: Math.floor(Math.random() * 8 - 2), desc: 'Snowy', rain: 0 },
+                { icon: 'ðŸŒ«ï¸', temp: Math.floor(Math.random() * 10 + 10), desc: 'Foggy', rain: Math.floor(Math.random() * 30) }
             ];
 
             return () => {
@@ -709,12 +710,12 @@
                 const weather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
                 
                 document.getElementById('location').textContent = location;
-                document.getElementById('temperature').textContent = `${weather.temp}°C`;
+                document.getElementById('temperature').textContent = `${weather.temp}Â°C`;
                 document.querySelector('.weather-icon-main').textContent = weather.icon;
                 document.getElementById('precipitationChance').textContent = `${weather.desc} ${weather.rain > 0 ? weather.rain + '%' : ''}`;
                 
                 // Update humidity and wind
-                document.querySelector('#humidity .text-xs').textContent = `${Math.floor(Math.random() * 40 + 40)}% • ${Math.random() > 0.5 ? 'Feels dry' : 'Feels humid'}`;
+                document.querySelector('#humidity .text-xs').textContent = `${Math.floor(Math.random() * 40 + 40)}% â€¢ ${Math.random() > 0.5 ? 'Feels dry' : 'Feels humid'}`;
                 document.querySelector('#windSpeed .text-xs').textContent = `${Math.floor(Math.random() * 20 + 5)} km/h ${['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(Math.random() * 8)]}`;
                 
                 // Update sun times
