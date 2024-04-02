@@ -1,3 +1,4 @@
+﻿// Advanced 3D physics and VR support
  // --- Configuration ---
  const GLOBE_RADIUS = 5;
  const GLOBE_ROTATION_SPEED = 0.0005;
