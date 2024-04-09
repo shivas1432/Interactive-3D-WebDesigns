@@ -1,3 +1,4 @@
+﻿// Advanced 3D physics and VR support
 const { useState, useRef, useEffect, useLayoutEffect, createContext } = React;
 
 /**
