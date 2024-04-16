@@ -1,4 +1,5 @@
-﻿// Enhanced 3D graphics and shaders
+﻿// Advanced 3D physics and VR support
+// Enhanced 3D graphics and shaders
 var rotateDiv = document.getElementById('rot');
 var rotateIcons = document.getElementById('rot-icons');
 var clickRotateDiv = document.getElementById('click-rot');
@@ -137,3 +138,4 @@ window.onload = function() {
     }, 1200);
   });
 };
+
