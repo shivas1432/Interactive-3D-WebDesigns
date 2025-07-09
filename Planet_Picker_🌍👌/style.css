@@ -1,0 +1,227 @@
+/* author: https://codepen.io/team/keyframers/pen/YoaeGg
+@keyframers */
+@import url("https://fonts.googleapis.com/css?family=DM+Sans:400,700&display=swap");
+:root {
+  --duration: .8s;
+  --half-duraiton: calc( var(--duration) / 2 );
+  --ease: cubic-bezier(.7, 0, .3, 1);
+}
+
+*, *:before, *:after {
+  box-sizing: border-box;
+  position: relative;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: black;
+  color: white;
+  font-family: "DM Sans", sans-serif;
+}
+
+img {
+  max-width: 100%;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1;
+  grid-template-rows: 1fr 1fr;
+}
+
+.planet {
+  grid-column: 1;
+  grid-row: 1/-1;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 10% 40% 40% 10%;
+  grid-template-rows: 10% 1fr 1fr;
+  grid-template-areas: "header header header header" "x title details y" "x planet photos photos";
+}
+.planet > .planet-title {
+  display: block;
+  grid-area: title;
+}
+.planet > .planet-figure {
+  grid-column: 1/-1;
+  grid-row: planet;
+  padding: 0;
+  margin: 0 auto;
+  position: relative;
+}
+.planet > .planet-figure img {
+  margin-bottom: -50%;
+}
+.planet > .planet-figure::after {
+  content: "";
+  position: fixed;
+  bottom: 0%;
+  top: 0%;
+  width: 100%;
+  left: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 30%);
+  z-index: 2;
+}
+.planet > .planet-details {
+  grid-area: details;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.detail {
+  font-size: 5vmin;
+  width: 3em;
+  font-weight: 400;
+  display: flex;
+  margin-left: 0.4em;
+  flex-shrink: 0;
+  align-self: start;
+}
+.detail:after {
+  content: attr(data-postfix);
+}
+.detail:before {
+  display: block;
+  position: absolute;
+  top: 100%;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  opacity: 0.6;
+  letter-spacing: 1px;
+}
+.detail[data-detail=hours]:before {
+  content: "Hours";
+}
+.detail[data-detail=gravity]:before {
+  content: "gravity";
+}
+.detail[data-detail=tilt]:before {
+  content: "tilt";
+}
+
+h1, h2 {
+  margin: 0;
+}
+
+/* ---------------------------------- */
+.planet {
+  visibility: hidden;
+  transition: visibility 0.01s linear var(--duration);
+  /* ---------------------------------- */
+  /* ---------------------------------- */
+  /* ---------------------------------- */
+}
+.planet[data-active] {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+.planet .planet-title .word {
+  overflow: hidden;
+}
+.planet .planet-title .char {
+  transform: translateY(100%);
+  transition: transform var(--duration) var(--ease);
+  transition-delay: calc(var(--char-index) * 0.1s);
+}
+.planet[data-active] .planet-title .char {
+  transform: translateY(0%);
+  transition-delay: calc(var(--duration) / 2 + var(--char-index) * 0.1s);
+}
+.planet .planet-description {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(1em);
+  transition: transform var(--duration) var(--ease), opacity var(--duration) linear, visibility 0.01s linear var(--duration);
+}
+.planet[data-active] .planet-description {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: var(--duration), var(--duration), 0s;
+}
+.planet .planet-details {
+  visibility: hidden;
+}
+.planet[data-active] .planet-details {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+.planet .planet-figure {
+  opacity: 0;
+  transition: opacity var(--duration) var(--ease);
+}
+.planet[data-active] .planet-figure {
+  opacity: 1;
+}
+
+/* ---------------------------------- */
+#app {
+  overflow: hidden;
+}
+
+.planet-nav {
+  grid-column: 1;
+  grid-row: 2;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  
+}
+.planet-nav svg {
+  display: block;
+  width: auto;
+  height: auto;
+  min-width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin-bottom: -50%;
+
+}
+@media (max-width: 600px) {
+  .planet-nav svg {
+    margin-bottom: -55%;
+  }
+}
+.planet-nav tspan {
+  cursor: pointer;
+  fill: #FFF;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity var(--duration) linear;
+}
+.planet-nav tspan[x] {
+  opacity: 0.6;
+}
+.planet-nav tspan:hover, .planet-nav tspan:focus {
+  opacity: 1;
+}
+.planet-nav svg {
+  transform-origin: center center;
+  --length: 7;
+  --range: 160deg;
+  transform: rotate(calc(var(--active, 0) / var(--length) * -1 * var(--range) + var(--range) / 2));
+  transition: transform var(--duration) var(--ease);
+}
+.planet-nav tspan {
+  cursor: pointer;
+}/*# sourceMappingURL=style.css.map */

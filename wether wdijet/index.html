@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic Weather Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .body-wrapper {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 30%, #2d2d5f 60%, #3a3a7a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .body-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 20%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(30, 144, 255, 0.08) 0%, transparent 50%);
+            animation: atmosphericShift 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes atmosphericShift {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        .weather-widget {
+            backdrop-filter: blur(20px) saturate(180%);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 
+                        0 0 0 1px rgba(255, 255, 255, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .weather-widget::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                rgba(255, 255, 255, 0.03) 0%, 
+                transparent 30%, 
+                rgba(255, 255, 255, 0.01) 60%, 
+                transparent 100%);
+            animation: shimmer 8s infinite linear;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(30deg); }
+        }
+
+        .weather-icon-main {
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.3)) 
+                    drop-shadow(0 5px 20px rgba(0, 0, 0, 0.2));
+            animation: floating 4s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-12px) rotate(2deg); }
+            66% { transform: translateY(-8px) rotate(-1deg); }
+        }
+
+        .temperature-glow {
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+                         0 0 40px rgba(255, 255, 255, 0.3),
+                         0 0 60px rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                        0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .precipitation-active {
+            animation: rainPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes rainPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.5); }
+        }
+
+        .forecast-day {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .forecast-day::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .forecast-day:hover::before {
+            opacity: 1;
+        }
+
+        .forecast-day:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2),
+                        0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        .animate-fadeInUp {
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeInScaleUp {
+            opacity: 0;
+            animation: fadeInScaleUp 1s ease-out forwards;
+        }
+
+        @keyframes fadeInScaleUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .animate-gentleBob {
+            animation: gentleBob 3s ease-in-out infinite;
+        }
+
+        @keyframes gentleBob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(1deg); }
+            50% { transform: translateY(-6px) rotate(0deg); }
+            75% { transform: translateY(-3px) rotate(-1deg); }
+        }
+
+        .sun-icon {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sun-info .sunrise:hover .sun-icon,
+        .sun-info .sunset:hover .sun-icon {
+            transform: rotate(20deg) scale(1.2);
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+        }
+
+        .wind-indicator {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wind-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+            animation: windFlow 3s linear infinite;
+            transform: translateY(-50%);
+        }
+
+        @keyframes windFlow {
+            0% { transform: translateX(-100%) translateY(-50%); }
+            100% { transform: translateX(100%) translateY(-50%); }
+        }
+
+        .humidity-indicator {
+            position: relative;
+        }
+
+        .humidity-indicator::before {
+            content: '💧';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: humidityDrop 4s ease-in-out infinite;
+        }
+
+        @keyframes humidityDrop {
+            0%, 100% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-60%) scale(1.1); }
+        }
+
+        .cloud-container {
+            pointer-events: auto;
+            border-radius: 0 24px 0 0;
+            overflow: hidden;
+        }
+
+        .tooltip {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .delay-100 { animation-delay: 0.1s !important; }
+        .delay-200 { animation-delay: 0.2s !important; }
+        .delay-300 { animation-delay: 0.3s !important; }
+        .delay-400 { animation-delay: 0.4s !important; }
+        .delay-500 { animation-delay: 0.5s !important; }
+        .delay-600 { animation-delay: 0.6s !important; }
+        .delay-700 { animation-delay: 0.7s !important; }
+        .delay-800 { animation-delay: 0.8s !important; }
+    </style>
+</head>
+<body>
+    <div class="body-wrapper min-h-screen flex justify-center items-center p-4">
+        <div class="weather-widget-container relative w-full max-w-sm sm:max-w-md">
+            <div class="weather-widget relative text-white rounded-3xl p-6 overflow-hidden">
+                <div id="cloud-container" class="cloud-container absolute top-0 right-0 w-36 h-36 sm:w-40 sm:h-40 z-30 cursor-pointer">
+                    <div id="cloud-tooltip" class="tooltip absolute top-20 right-2 sm:top-24 sm:right-4 text-white px-3 py-1.5 rounded-md text-xs opacity-0 transition-opacity duration-300 pointer-events-none z-40 shadow-lg">
+                        Click clouds for rain! ☔
+                        <div class="absolute -top-1 right-3 w-3 h-3 bg-black/80 transform rotate-45"></div>
+                    </div>
+                </div>
+
+                <div class="relative z-20">
+                    <div class="date-time text-sm font-light opacity-90 mb-2 tracking-wide animate-fadeInUp" id="dateTime">Thursday, 09:24</div>
+
+                    <div class="current-weather flex items-center mb-3">
+                        <div class="weather-icon-main text-6xl mr-4">⛅</div>
+                        <div class="temp text-6xl font-semibold">
+                            <span class="temperature-glow bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-white animate-fadeInScaleUp delay-100" id="temperature">8°C</span>
+                        </div>
+                    </div>
+
+                    <div class="location text-xl opacity-95 mb-5 tracking-wide animate-fadeInUp delay-200" id="location">New York, USA</div>
+
+                    <div class="sun-info glass-panel rounded-2xl p-4 flex justify-between items-center mb-5 animate-fadeInUp delay-300">
+                        <div class="sunrise text-center">
+                            <div class="sun-icon text-2xl mb-2">🌅</div>
+                            <div class="text-xs opacity-85 font-medium" id="sunriseTime">6:14 AM</div>
+                        </div>
+                        <div class="day-length text-center">
+                            <div class="text-sm opacity-95 font-medium" id="dayLength">11h 42m</div>
+                            <div class="text-xs opacity-75 mt-1">Daylight</div>
+                        </div>
+                        <div class="sunset text-center">
+                            <div class="sun-icon text-2xl mb-2">🌇</div>
+                            <div class="text-xs opacity-85 font-medium" id="sunsetTime">5:56 PM</div>
+                        </div>
+                    </div>
+
+                    <div class="precipitation glass-panel precipitation-active rounded-xl p-4 flex items-center justify-between mb-5 animate-fadeInUp delay-400">
+                        <div class="flex items-center">
+                            <div class="precip-icon text-3xl mr-3 text-blue-300 drop-shadow-lg animate-gentleBob">🌧️</div>
+                            <div>
+                                <div class="text-sm opacity-95 font-medium" id="precipitationChance">Rain 85%</div>
+                                <div class="text-xs opacity-75">Heavy shower expected</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm opacity-95 font-medium">2.5mm</div>
+                            <div class="text-xs opacity-75">Expected</div>
+                        </div>
+                    </div>
+
+                    <div class="humidity-wind glass-panel rounded-xl p-4 flex justify-between text-sm opacity-95 mb-6 animate-fadeInUp delay-500">
+                        <div class="humidity-indicator relative" id="humidity">
+                            <div class="font-medium">Humidity</div>
+                            <div class="text-xs opacity-75">68% • Feels muggy</div>
+                        </div>
+                        <div class="wind-indicator relative" id="windSpeed">
+                            <div class="font-medium">Wind</div>
+                            <div class="text-xs opacity-75">12 km/h NW</div>
+                        </div>
+                    </div>
+
+                    <div class="forecast flex flex-nowrap justify-between gap-2 pb-2">
+                        <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-500">
+                            <div class="day-name text-xs font-medium mb-2 opacity-85">Today</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">⛅</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">8°</div>
+                            <div class="low-temp text-xs opacity-70">2°</div>
+                        </div>
+                        <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-600">
+                            <div class="day-name text-xs font-medium mb-2 opacity-85">Fri</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">🌧️</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">7°</div>
+                            <div class="low-temp text-xs opacity-70">1°</div>
+                        </div>
+                        <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-700">
+                            <div class="day-name text-xs font-medium mb-2 opacity-85">Sat</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">🌧️</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100 mb-1">6°</div>
+                            <div class="low-temp text-xs opacity-70">0°</div>
+                        </div>
+                        <div class="forecast-day glass-panel rounded-xl p-3 w-20 text-center cursor-pointer animate-fadeInUp delay-800">
+                            <div class="day-name text-xs font-medium mb-2 opacity-85">Sun</div>
+                            <div class="forecast-icon text-2xl my-2 drop-shadow-md">☀️</div>
+                            <div class="high-temp text-sm font-semibold bg-clip-text text-transparent bg-gradient-to-r from-white to-yellow-100 mb-1">9°</div>
+                            <div class="low-temp text-xs opacity-70">2°</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from "https://esm.sh/three";
+        import { OrbitControls } from "https://esm.sh/three/examples/jsm/controls/OrbitControls.js";
+
+        // Update date and time
+        const dateTimeEl = document.getElementById('dateTime');
+        function updateDateTime() {
+            const now = new Date();
+            const optionsDate = { weekday: 'long' };
+            const optionsTime = { hour: '2-digit', minute: '2-digit', hour12: false };
+            if (dateTimeEl) {
+                dateTimeEl.textContent = `${now.toLocaleDateString(undefined, optionsDate)}, ${now.toLocaleTimeString([], optionsTime)}`;
+            }
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+
+        // Enhanced 3D Cloud Scene
+        const container = document.getElementById('cloud-container');
+        if (container) {
+            const containerRect = container.getBoundingClientRect();
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(65, containerRect.width / containerRect.height, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+            renderer.setSize(containerRect.width, containerRect.height);
+            renderer.setClearColor(0x000000, 0);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            camera.position.set(0, 0.8, 5);
+
+            // Enhanced lighting setup
+            const ambientLight = new THREE.AmbientLight(0x404080, 0.4);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            const pointLight1 = new THREE.PointLight(0x87CEEB, 0.8, 15);
+            pointLight1.position.set(-2, 2, 3);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xFFA500, 0.6, 12);
+            pointLight2.position.set(3, 1, -2);
+            scene.add(pointLight2);
+
+            // Enhanced controls
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.rotateSpeed = 0.6;
+            controls.enableZoom = false;
+            controls.enablePan = false;
+            controls.minPolarAngle = Math.PI / 4;
+            controls.maxPolarAngle = Math.PI / 1.5;
+
+            const cloudGroup = new THREE.Group();
+            scene.add(cloudGroup);
+
+            // Enhanced cloud materials
+            const cloudMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0xf8f8ff,
+                transparent: true,
+                opacity: 0.9,
+                roughness: 0.7,
+                metalness: 0.0,
+                transmission: 0.15,
+                ior: 1.33,
+                thickness: 0.5,
+                specularIntensity: 0.3,
+                sheen: 0.4,
+                sheenColor: 0xffffff,
+                sheenRoughness: 0.3,
+                clearcoat: 0.1,
+                clearcoatRoughness: 0.2,
+            });
+
+            const cloudMaterialDark = new THREE.MeshPhysicalMaterial({
+                color: 0xe0e0e8,
+                transparent: true,
+                opacity: 0.95,
+                roughness: 0.8,
+                metalness: 0.0,
+                transmission: 0.1,
+                ior: 1.33,
+                thickness: 0.3,
+                specularIntensity: 0.2,
+                sheen: 0.2,
+                sheenColor: 0x404080,
+                sheenRoughness: 0.4,
+            });
+
+            function createCloudPart(radius, position, isDark = false) {
+                const geometry = new THREE.SphereGeometry(radius, 24, 24);
+                const mesh = new THREE.Mesh(geometry, isDark ? cloudMaterialDark : cloudMaterial);
+                mesh.position.copy(position);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                return mesh;
+            }
+
+            function createRealisticCloud(x, y, z, scale, isDark = false) {
+                const cloudGroup = new THREE.Group();
+                cloudGroup.position.set(x, y, z);
+                cloudGroup.scale.set(scale, scale, scale);
+
+                // More realistic cloud structure
+                const parts = [
+                    { radius: 0.9, position: new THREE.Vector3(0, 0, 0) },
+                    { radius: 0.7, position: new THREE.Vector3(0.8, 0.3, 0.2) },
+                    { radius: 0.6, position: new THREE.Vector3(-0.7, 0.2, -0.1) },
+                    { radius: 0.8, position: new THREE.Vector3(0.2, 0.6, -0.4) },
+                    { radius: 0.5, position: new THREE.Vector3(0.4, -0.4, 0.3) },
+                    { radius: 0.65, position: new THREE.Vector3(-0.5, -0.3, 0.4) },
+                    { radius: 0.4, position: new THREE.Vector3(1.0, -0.1, -0.3) },
+                    { radius: 0.55, position: new THREE.Vector3(-0.8, 0.4, 0.3) },
+                    { radius: 0.35, position: new THREE.Vector3(0.6, 0.8, 0.1) },
+                    { radius: 0.4, position: new THREE.Vector3(-0.3, 0.7, -0.2) },
+                ];
+
+                parts.forEach(part => {
+                    cloudGroup.add(createCloudPart(part.radius, part.position, isDark));
+                });
+
+                cloudGroup.userData = {
+                    isRaining: false,
+                    rainColor: isDark ? 0x4682B4 : 0x87CEEB,
+                    originalPosition: cloudGroup.position.clone(),
+                    bobOffset: Math.random() * Math.PI * 2,
+                    bobSpeed: 0.0003 + Math.random() * 0.0002,
+                    bobAmount: 0.1 + Math.random() * 0.05,
+                    rotationSpeed: 0.001 + Math.random() * 0.002,
+                };
+
+                return cloudGroup;
+            }
+
+            // Create multiple clouds for more realism
+            const cloud1 = createRealisticCloud(-0.8, 0.3, 0.2, 1.0);
+            const cloud2 = createRealisticCloud(0.9, -0.2, 0.4, 0.8, true);
+            const cloud3 = createRealisticCloud(0.1, 0.5, -0.3, 0.6);
+
+            cloudGroup.add(cloud1, cloud2, cloud3);
+            cloudGroup.position.y = -0.3;
+
+            // Enhanced rain system
+            function createEnhancedRain(cloud) {
+                const rainGroup = new THREE.Group();
+                cloud.add(rainGroup);
+                cloud.userData.rainGroup = rainGroup;
+
+                const raindropMaterial = new THREE.MeshBasicMaterial({
+                    color: cloud.userData.rainColor,
+                    transparent: true,
+                    opacity: 0.8
+                });
+
+                const raindrops = [];
+                for (let i = 0; i < 40; i++) {
+                    const raindropGeom = new THREE.CylinderGeometry(0.01, 0.02, 0.3, 6);
+                    const raindrop = new THREE.Mesh(raindropGeom, raindropMaterial);
+                    
+                    raindrop.position.set(
+                        (Math.random() - 0.5) * 2.5,
+                        -0.5 - Math.random() * 2,
+                        (Math.random() - 0.5) * 2.5
+                    );
+                    
+                    raindrop.userData = {
+                        originalY: raindrop.position.y,
+                        speed: 0.06 + Math.random() * 0.04,
+                        swayAmount: Math.random() * 0.02,
+                        swaySpeed: Math.random() * 0.03,
+                    };
+                    
+                    raindrops.push(raindrop);
+                    rainGroup.add(raindrop);
+                }
+
+                rainGroup.visible = false;
+                return raindrops;
+            }
+
+            const raindrops1 = createEnhancedRain(cloud1);
+            const raindrops2 = createEnhancedRain(cloud2);
+            const raindrops3 = createEnhancedRain(cloud3);
+
+            // Enhanced interaction
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            renderer.domElement.addEventListener('click', (event) => {
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(cloudGroup.children, true);
+
+                if (intersects.length > 0) {
+                    const allClouds = [cloud1, cloud2, cloud3];
+                    const allRaindrops = [raindrops1, raindrops2, raindrops3];
+
+                    // Toggle rain for all clouds
+                    const currentRainState = allClouds.some(cloud => cloud.userData.isRaining);
+                    const newRainState = !currentRainState;
+
+                    allClouds.forEach((cloud, index) => {
+                        cloud.userData.isRaining = newRainState;
+                        if (cloud.userData.rainGroup) {
+                            cloud.userData.rainGroup.visible = newRainState;
+                        }
+
+                        // Visual feedback
+                        const originalScale = cloud.scale.clone();
+                        cloud.scale.multiplyScalar(1.1);
+                        setTimeout(() => {
+                            cloud.scale.copy(originalScale);
+                        }, 200);
+                    });
+
+                    // Update precipitation panel
+                    const precipPanel = document.querySelector('.precipitation');
+                    if (newRainState) {
+                        precipPanel.classList.add('precipitation-active');
+                    } else {
+                        precipPanel.classList.remove('precipitation-active');
+                    }
+                }
+            });
+
+            // Show tooltip
+            const tooltip = document.getElementById('cloud-tooltip');
+            setTimeout(() => {
+                if (tooltip) {
+                    tooltip.style.opacity = '1';
+                    setTimeout(() => {
+                        tooltip.style.opacity = '0';
+                    }, 4000);
+                }
+            }, 2000);
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                const time = Date.now();
+
+                // Animate clouds
+                [cloud1, cloud2, cloud3].forEach((cloud, index) => {
+                    if (cloud) {
+                        // Bob animation
+                        cloud.position.y = cloud.userData.originalPosition.y + 
+                            Math.sin(time * cloud.userData.bobSpeed + cloud.userData.bobOffset) * cloud.userData.bobAmount;
+
+                        // Gentle rotation
+                        cloud.rotation.y += cloud.userData.rotationSpeed;
+
+                        // Animate rain
+                        if (cloud.userData.isRaining && cloud.userData.rainGroup) {
+                            const raindrops = index === 0 ? raindrops1 : index === 1 ? raindrops2 : raindrops3;
+                            raindrops.forEach(raindrop => {
+                                raindrop.position.y -= raindrop.userData.speed;
+                                raindrop.position.x += Math.sin(time * raindrop.userData.swaySpeed) * raindrop.userData.swayAmount;
+
+                                if (raindrop.position.y < -6) {
+                                    raindrop.position.y = -0.5;
+                                    raindrop.position.x = (Math.random() - 0.5) * 2.5 * cloud.scale.x;
+                                    raindrop.position.z = (Math.random() - 0.5) * 2.5 * cloud.scale.z;
+                                }
+                            });
+                        }
+                    }
+                });
+
+                // Auto-rotate the entire cloud group
+                cloudGroup.rotation.y += 0.001;
+
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            // Handle resize
+            window.addEventListener('resize', () => {
+                const newRect = container.getBoundingClientRect();
+                if (newRect.width > 0 && newRect.height > 0) {
+                    camera.aspect = newRect.width / newRect.height;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(newRect.width, newRect.height);
+                }
+            });
+
+            animate();
+
+        } else {
+            console.error("Cloud container not found!");
+        }
+
+        // Add dynamic weather effects
+        function addAtmosphericEffects() {
+            const body = document.querySelector('.body-wrapper');
+            
+            // Create floating particles
+            for (let i = 0; i < 15; i++) {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 4 + 2}px;
+                    height: ${Math.random() * 4 + 2}px;
+                    background: rgba(255, 255, 255, ${Math.random() * 0.3 + 0.1});
+                    border-radius: 50%;
+                    animation: float ${Math.random() * 10 + 15}s linear infinite;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    pointer-events: none;
+                    z-index: 1;
+                `;
+                body.appendChild(particle);
+            }
+
+            // Add CSS for floating animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes float {
+                    0% {
+                        transform: translateY(100vh) translateX(0px);
+                        opacity: 0;
+                    }
+                    10% {
+                        opacity: 1;
+                    }
+                    90% {
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(-100px) translateX(${Math.random() * 200 - 100}px);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Add realistic weather data updates
+        function simulateWeatherData() {
+            const locations = [
+                'New York, USA', 'London, UK', 'Tokyo, Japan', 
+                'Sydney, Australia', 'Paris, France', 'Berlin, Germany'
+            ];
+            
+            const weatherConditions = [
+                { icon: '☀️', temp: Math.floor(Math.random() * 15 + 20), desc: 'Sunny', rain: 0 },
+                { icon: '⛅', temp: Math.floor(Math.random() * 10 + 15), desc: 'Partly Cloudy', rain: Math.floor(Math.random() * 20) },
+                { icon: '🌧️', temp: Math.floor(Math.random() * 8 + 8), desc: 'Rainy', rain: Math.floor(Math.random() * 60 + 40) },
+                { icon: '⛈️', temp: Math.floor(Math.random() * 6 + 12), desc: 'Stormy', rain: Math.floor(Math.random() * 40 + 60) },
+                { icon: '🌨️', temp: Math.floor(Math.random() * 8 - 2), desc: 'Snowy', rain: 0 },
+                { icon: '🌫️', temp: Math.floor(Math.random() * 10 + 10), desc: 'Foggy', rain: Math.floor(Math.random() * 30) }
+            ];
+
+            return () => {
+                const location = locations[Math.floor(Math.random() * locations.length)];
+                const weather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+                
+                document.getElementById('location').textContent = location;
+                document.getElementById('temperature').textContent = `${weather.temp}°C`;
+                document.querySelector('.weather-icon-main').textContent = weather.icon;
+                document.getElementById('precipitationChance').textContent = `${weather.desc} ${weather.rain > 0 ? weather.rain + '%' : ''}`;
+                
+                // Update humidity and wind
+                document.querySelector('#humidity .text-xs').textContent = `${Math.floor(Math.random() * 40 + 40)}% • ${Math.random() > 0.5 ? 'Feels dry' : 'Feels humid'}`;
+                document.querySelector('#windSpeed .text-xs').textContent = `${Math.floor(Math.random() * 20 + 5)} km/h ${['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.floor(Math.random() * 8)]}`;
+                
+                // Update sun times
+                const sunrise = new Date();
+                sunrise.setHours(Math.floor(Math.random() * 2 + 6), Math.floor(Math.random() * 60));
+                const sunset = new Date();
+                sunset.setHours(Math.floor(Math.random() * 3 + 17), Math.floor(Math.random() * 60));
+                
+                document.getElementById('sunriseTime').textContent = sunrise.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                document.getElementById('sunsetTime').textContent = sunset.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                
+                const dayLength = (sunset - sunrise) / (1000 * 60 * 60);
+                document.getElementById('dayLength').textContent = `${Math.floor(dayLength)}h ${Math.floor((dayLength % 1) * 60)}m`;
+            };
+        }
+
+        // Initialize atmospheric effects
+        addAtmosphericEffects();
+
+        // Simulate weather changes every 10 seconds for demo
+        const updateWeather = simulateWeatherData();
+        setInterval(updateWeather, 10000);
+
+        // Add enhanced hover effects
+        document.querySelectorAll('.forecast-day').forEach(day => {
+            day.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.05)';
+                this.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(255, 255, 255, 0.1)';
+            });
+            
+            day.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+                this.style.boxShadow = '';
+            });
+        });
+
+        // Add click effects to weather elements
+        document.querySelector('.current-weather').addEventListener('click', function() {
+            const temp = this.querySelector('#temperature');
+            temp.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                temp.style.transform = 'scale(1)';
+            }, 200);
+        });
+
+        // Enhanced precipitation panel interaction
+        document.querySelector('.precipitation').addEventListener('click', function() {
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Particle Web</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0f0f0f 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+            height: 100vh;
+        }
+        
+        canvas {
+            display: block;
+            cursor: none;
+        }
+        
+        .info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ffff;
+            font-size: 14px;
+            text-shadow: 0 0 10px #00ffff;
+            z-index: 10;
+            opacity: 0.7;
+        }
+        
+        .glow-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00ffff;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 
+                0 0 20px #00ffff,
+                inset 0 0 20px #00ffff;
+            animation: pulse 2s infinite;
+            z-index: 5;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <div class="info">
+        Move your cursor to interact with the particle web<br>
+        Click and drag particles to mix their colors<br>
+        Click empty space for spectacular energy bursts
+    </div>
+    <div class="glow-cursor" id="cursor"></div>
+
+    <script>
+        class Vector {
+            constructor(x = 0, y = 0) {
+                this.x = x;
+                this.y = y;
+            }
+            
+            static add(v1, v2) {
+                return new Vector(v1.x + v2.x, v1.y + v2.y);
+            }
+            
+            static sub(v1, v2) {
+                return new Vector(v1.x - v2.x, v1.y - v2.y);
+            }
+            
+            static mult(v, scalar) {
+                return new Vector(v.x * scalar, v.y * scalar);
+            }
+            
+            add(v) {
+                this.x += v.x;
+                this.y += v.y;
+                return this;
+            }
+            
+            sub(v) {
+                this.x -= v.x;
+                this.y -= v.y;
+                return this;
+            }
+            
+            mult(scalar) {
+                this.x *= scalar;
+                this.y *= scalar;
+                return this;
+            }
+            
+            mag() {
+                return Math.sqrt(this.x * this.x + this.y * this.y);
+            }
+            
+            normalize() {
+                const m = this.mag();
+                if (m > 0) {
+                    this.x /= m;
+                    this.y /= m;
+                }
+                return this;
+            }
+            
+            limit(max) {
+                if (this.mag() > max) {
+                    this.normalize().mult(max);
+                }
+                return this;
+            }
+            
+            copy() {
+                return new Vector(this.x, this.y);
+            }
+        }
+
+        class Particle {
+            constructor(x, y, id) {
+                this.position = new Vector(x, y);
+                this.velocity = new Vector(Math.random() * 2 - 1, Math.random() * 2 - 1);
+                this.acceleration = new Vector(0, 0);
+                this.maxSpeed = 2;
+                this.maxForce = 0.05;
+                this.radius = Math.random() * 3 + 2;
+                this.id = id;
+                this.trail = [];
+                this.maxTrailLength = 15;
+                this.energy = Math.random() * 100 + 50;
+                this.originalEnergy = this.energy;
+                this.connections = [];
+                this.hue = Math.random() * 360; // Full color spectrum
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.isDragged = false;
+                this.dragForce = new Vector(0, 0);
+            }
+            
+            applyForce(force) {
+                this.acceleration.add(force);
+            }
+            
+            seek(target) {
+                const desired = Vector.sub(target, this.position);
+                desired.normalize().mult(this.maxSpeed);
+                const steer = Vector.sub(desired, this.velocity);
+                steer.limit(this.maxForce);
+                return steer;
+            }
+            
+            separate(particles) {
+                const desiredSeparation = 25;
+                let steer = new Vector(0, 0);
+                let count = 0;
+                
+                for (let other of particles) {
+                    const distance = Vector.sub(this.position, other.position).mag();
+                    if (distance > 0 && distance < desiredSeparation) {
+                        const diff = Vector.sub(this.position, other.position);
+                        diff.normalize().mult(1 / distance);
+                        steer.add(diff);
+                        count++;
+                    }
+                }
+                
+                if (count > 0) {
+                    steer.mult(1 / count);
+                    steer.normalize().mult(this.maxSpeed);
+                    steer.sub(this.velocity);
+                    steer.limit(this.maxForce);
+                }
+                
+                return steer;
+            }
+            
+            cohesion(particles) {
+                const neighborRadius = 50;
+                let sum = new Vector(0, 0);
+                let count = 0;
+                
+                for (let other of particles) {
+                    const distance = Vector.sub(this.position, other.position).mag();
+                    if (distance > 0 && distance < neighborRadius) {
+                        sum.add(other.position);
+                        count++;
+                    }
+                }
+                
+                if (count > 0) {
+                    sum.mult(1 / count);
+                    return this.seek(sum);
+                }
+                
+                return new Vector(0, 0);
+            }
+            
+            update(particles, mouse) {
+                // Handle dragging
+                if (this.isDragged) {
+                    this.velocity.mult(0.8);
+                    this.velocity.add(this.dragForce);
+                    this.energy = Math.min(this.energy + 5, this.originalEnergy * 4);
+                    this.hue = (this.hue + 3) % 360; // Color cycling when dragged
+                }
+                
+                // Apply flocking behaviors
+                const sep = this.separate(particles);
+                const coh = this.cohesion(particles);
+                
+                sep.mult(2.0);
+                coh.mult(1.0);
+                
+                this.applyForce(sep);
+                this.applyForce(coh);
+                
+                // Mouse interaction - stronger attraction
+                if (mouse.x !== -1000) {
+                    const mousePos = new Vector(mouse.x, mouse.y);
+                    const distance = Vector.sub(this.position, mousePos).mag();
+                    
+                    if (distance < 120) {
+                        const force = this.seek(mousePos);
+                        force.mult(0.8);
+                        this.applyForce(force);
+                        this.energy = Math.min(this.energy + 3, this.originalEnergy * 3);
+                        
+                        // Color mixing effect
+                        const mouseInfluence = Math.max(0, 1 - distance / 120);
+                        this.hue = (this.hue + mouseInfluence * 5) % 360;
+                    }
+                }
+                
+                // Update physics
+                this.velocity.add(this.acceleration);
+                this.velocity.limit(this.maxSpeed);
+                this.position.add(this.velocity);
+                this.acceleration.mult(0);
+                
+                // Update trail
+                this.trail.push(this.position.copy());
+                if (this.trail.length > this.maxTrailLength) {
+                    this.trail.shift();
+                }
+                
+                // Boundary wrapping
+                if (this.position.x < 0) this.position.x = canvas.width;
+                if (this.position.x > canvas.width) this.position.x = 0;
+                if (this.position.y < 0) this.position.y = canvas.height;
+                if (this.position.y > canvas.height) this.position.y = 0;
+                
+                // Energy decay
+                this.energy *= 0.995;
+                this.energy = Math.max(this.energy, this.originalEnergy * 0.3);
+                
+                this.pulsePhase += 0.1;
+                this.isDragged = false; // Reset drag state
+            }
+            
+            findConnections(particles) {
+                this.connections = [];
+                const maxDistance = 80;
+                
+                for (let other of particles) {
+                    if (other !== this) {
+                        const distance = Vector.sub(this.position, other.position).mag();
+                        if (distance < maxDistance) {
+                            this.connections.push({
+                                particle: other,
+                                distance: distance,
+                                strength: 1 - (distance / maxDistance)
+                            });
+                        }
+                    }
+                }
+            }
+            
+            draw(ctx) {
+                // Draw connections
+                for (let connection of this.connections) {
+                    const alpha = connection.strength * (this.energy / this.originalEnergy) * 0.3;
+                    const gradient = ctx.createLinearGradient(
+                        this.position.x, this.position.y,
+                        connection.particle.position.x, connection.particle.position.y
+                    );
+                    
+                    gradient.addColorStop(0, `hsla(${this.hue}, 70%, 60%, ${alpha})`);
+                    gradient.addColorStop(1, `hsla(${connection.particle.hue}, 70%, 60%, ${alpha})`);
+                    
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = connection.strength * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.position.x, this.position.y);
+                    ctx.lineTo(connection.particle.position.x, connection.particle.position.y);
+                    ctx.stroke();
+                }
+                
+                // Draw trail
+                for (let i = 0; i < this.trail.length - 1; i++) {
+                    const alpha = (i / this.trail.length) * (this.energy / this.originalEnergy) * 0.5;
+                    ctx.strokeStyle = `hsla(${this.hue}, 80%, 70%, ${alpha})`;
+                    ctx.lineWidth = (i / this.trail.length) * this.radius * 0.5;
+                    ctx.beginPath();
+                    ctx.moveTo(this.trail[i].x, this.trail[i].y);
+                    ctx.lineTo(this.trail[i + 1].x, this.trail[i + 1].y);
+                    ctx.stroke();
+                }
+                
+                // Draw particle
+                const pulse = Math.sin(this.pulsePhase) * 0.3 + 0.7;
+                const energyRatio = this.energy / this.originalEnergy;
+                const currentRadius = this.radius * pulse * energyRatio;
+                
+                // Only draw if radius is positive
+                if (currentRadius > 0) {
+                    // Outer glow
+                    const outerRadius = Math.max(1, currentRadius * 3);
+                    const gradient = ctx.createRadialGradient(
+                        this.position.x, this.position.y, 0,
+                        this.position.x, this.position.y, outerRadius
+                    );
+                    gradient.addColorStop(0, `hsla(${this.hue}, 100%, 80%, ${energyRatio * 0.8})`);
+                    gradient.addColorStop(0.3, `hsla(${this.hue}, 90%, 60%, ${energyRatio * 0.4})`);
+                    gradient.addColorStop(1, `hsla(${this.hue}, 80%, 40%, 0)`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(this.position.x, this.position.y, outerRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Inner core
+                    ctx.fillStyle = `hsla(${this.hue}, 100%, 90%, ${energyRatio})`;
+                    ctx.beginPath();
+                    ctx.arc(this.position.x, this.position.y, Math.max(0.5, currentRadius), 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Ultra bright center
+                    const centerRadius = Math.max(0.2, currentRadius * 0.3);
+                    ctx.fillStyle = `hsla(${this.hue + 20}, 100%, 95%, ${energyRatio * 0.8})`;
+                    ctx.beginPath();
+                    ctx.arc(this.position.x, this.position.y, centerRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        class EnergyBurst {
+            constructor(x, y) {
+                this.position = new Vector(x, y);
+                this.particles = [];
+                this.rings = [];
+                this.life = 1.0;
+                this.maxLife = 1.0;
+                this.shockwaves = [];
+                
+                // Create multiple colorful rings
+                for (let ring = 0; ring < 4; ring++) {
+                    this.rings.push({
+                        radius: 0,
+                        maxRadius: 80 + ring * 40,
+                        hue: Math.random() * 360,
+                        life: 1.0,
+                        speed: 2 + ring * 0.5
+                    });
+                }
+                
+                // Create burst particles with more variety
+                for (let i = 0; i < 60; i++) {
+                    const angle = (Math.PI * 2 * i) / 60 + Math.random() * 0.5;
+                    const speed = Math.random() * 8 + 2;
+                    const layer = Math.floor(Math.random() * 3);
+                    this.particles.push({
+                        position: this.position.copy(),
+                        velocity: new Vector(Math.cos(angle) * speed, Math.sin(angle) * speed),
+                        life: 1.0,
+                        hue: (Math.random() * 360),
+                        size: Math.random() * 4 + 1,
+                        layer: layer,
+                        sparkle: Math.random() > 0.7
+                    });
+                }
+                
+                // Create shockwave effect
+                this.shockwaves.push({
+                    radius: 0,
+                    maxRadius: 200,
+                    life: 1.0,
+                    speed: 8
+                });
+            }
+            
+            update() {
+                this.life -= 0.015;
+                
+                // Update rings
+                for (let ring of this.rings) {
+                    ring.radius += ring.speed;
+                    ring.life -= 0.02;
+                    ring.hue = (ring.hue + 2) % 360;
+                }
+                
+                // Update shockwaves
+                for (let wave of this.shockwaves) {
+                    wave.radius += wave.speed;
+                    wave.life -= 0.03;
+                }
+                
+                // Update particles
+                for (let particle of this.particles) {
+                    particle.position.add(particle.velocity);
+                    particle.velocity.mult(0.96);
+                    particle.life -= 0.008;
+                    particle.hue = (particle.hue + 1) % 360;
+                    
+                    // Add some gravity for certain layers
+                    if (particle.layer === 2) {
+                        particle.velocity.add(new Vector(0, 0.1));
+                    }
+                }
+                
+                this.particles = this.particles.filter(p => p.life > 0);
+                this.rings = this.rings.filter(r => r.life > 0 && r.radius < r.maxRadius);
+                this.shockwaves = this.shockwaves.filter(w => w.life > 0 && w.radius < w.maxRadius);
+                
+                return this.life > 0 || this.particles.length > 0 || this.rings.length > 0;
+            }
+            
+            draw(ctx) {
+                // Draw shockwaves
+                for (let wave of this.shockwaves) {
+                    if (wave.radius > 0) {
+                        const alpha = wave.life * 0.6;
+                        for (let i = 0; i < 3; i++) {
+                            ctx.strokeStyle = `hsla(${180 + i * 60}, 80%, 70%, ${alpha / (i + 1)})`;
+                            ctx.lineWidth = Math.max(1, 3 - i);
+                            ctx.beginPath();
+                            ctx.arc(this.position.x, this.position.y, Math.max(1, wave.radius + i * 5), 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                
+                // Draw rings
+                for (let ring of this.rings) {
+                    if (ring.radius > 0) {
+                        const alpha = ring.life * 0.8;
+                        const innerRadius = Math.max(0, ring.radius - 10);
+                        const outerRadius = ring.radius + 10;
+                        
+                        const gradient = ctx.createRadialGradient(
+                            this.position.x, this.position.y, innerRadius,
+                            this.position.x, this.position.y, outerRadius
+                        );
+                        gradient.addColorStop(0, `hsla(${ring.hue}, 100%, 80%, 0)`);
+                        gradient.addColorStop(0.5, `hsla(${ring.hue}, 100%, 70%, ${alpha})`);
+                        gradient.addColorStop(1, `hsla(${ring.hue}, 100%, 50%, 0)`);
+                        
+                        ctx.strokeStyle = gradient;
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.arc(this.position.x, this.position.y, ring.radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                }
+                
+                // Draw particles in layers
+                for (let layer = 0; layer < 3; layer++) {
+                    for (let particle of this.particles) {
+                        if (particle.layer !== layer) continue;
+                        
+                        const alpha = particle.life * this.life;
+                        const size = particle.size * particle.life;
+                        
+                        // Sparkle effect for special particles
+                        if (particle.sparkle && Math.random() > 0.7 && size > 0) {
+                            ctx.fillStyle = `hsla(${particle.hue}, 100%, 95%, ${alpha})`;
+                            ctx.beginPath();
+                            ctx.arc(particle.position.x, particle.position.y, Math.max(1, size * 2), 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        
+                        // Main particle glow
+                        const glowRadius = Math.max(1, size * 4);
+                        const gradient = ctx.createRadialGradient(
+                            particle.position.x, particle.position.y, 0,
+                            particle.position.x, particle.position.y, glowRadius
+                        );
+                        gradient.addColorStop(0, `hsla(${particle.hue}, 100%, 90%, ${alpha})`);
+                        gradient.addColorStop(0.4, `hsla(${particle.hue}, 90%, 70%, ${alpha * 0.6})`);
+                        gradient.addColorStop(1, `hsla(${particle.hue}, 80%, 50%, 0)`);
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(particle.position.x, particle.position.y, glowRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Core particle
+                        if (size > 0) {
+                            ctx.fillStyle = `hsla(${(particle.hue + 30) % 360}, 100%, 95%, ${alpha})`;
+                            ctx.beginPath();
+                            ctx.arc(particle.position.x, particle.position.y, Math.max(0.5, size), 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Main application
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const cursor = document.getElementById('cursor');
+        
+        let width, height;
+        let particles = [];
+        let energyBursts = [];
+        let mouse = { x: -1000, y: -1000, down: false, dragging: false };
+        let draggedParticles = [];
+        let lastMousePos = { x: 0, y: 0 };
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        
+        function init() {
+            resize();
+            particles = [];
+            
+            // Create particles
+            const numParticles = Math.floor((width * height) / 15000);
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle(
+                    Math.random() * width,
+                    Math.random() * height,
+                    i
+                ));
+            }
+        }
+        
+        function animate() {
+            // Clear canvas with fade effect
+            ctx.fillStyle = 'rgba(15, 15, 15, 0.08)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Handle mouse dragging
+            if (mouse.down && mouse.dragging) {
+                // Find particles near mouse to drag
+                draggedParticles = [];
+                for (let particle of particles) {
+                    const distance = Vector.sub(particle.position, new Vector(mouse.x, mouse.y)).mag();
+                    if (distance < 80) {
+                        draggedParticles.push(particle);
+                        particle.isDragged = true;
+                        
+                        // Calculate drag force
+                        const dragVector = Vector.sub(new Vector(mouse.x, mouse.y), new Vector(lastMousePos.x, lastMousePos.y));
+                        particle.dragForce = Vector.mult(dragVector, 0.3);
+                    }
+                }
+            }
+            
+            // Update and draw particles
+            for (let particle of particles) {
+                particle.findConnections(particles);
+                particle.update(particles, mouse);
+                particle.draw(ctx);
+            }
+            
+            // Update and draw energy bursts
+            energyBursts = energyBursts.filter(burst => {
+                burst.update();
+                burst.draw(ctx);
+                return burst.life > 0;
+            });
+            
+            // Draw mouse interaction glow when dragging
+            if (mouse.down && draggedParticles.length > 0) {
+                const gradient = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 80);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(mouse.x, mouse.y, 80, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            lastMousePos.x = mouse.x;
+            lastMousePos.y = mouse.y;
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Event listeners
+        window.addEventListener('resize', init);
+        
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            cursor.style.left = (e.clientX - 10) + 'px';
+            cursor.style.top = (e.clientY - 10) + 'px';
+            
+            if (mouse.down) {
+                mouse.dragging = true;
+            }
+        });
+        
+        canvas.addEventListener('mousedown', (e) => {
+            mouse.down = true;
+            mouse.dragging = false;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+        
+        canvas.addEventListener('mouseup', (e) => {
+            mouse.down = false;
+            mouse.dragging = false;
+            draggedParticles = [];
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+            mouse.down = false;
+            mouse.dragging = false;
+            cursor.style.display = 'none';
+            draggedParticles = [];
+        });
+        
+        canvas.addEventListener('mouseenter', () => {
+            cursor.style.display = 'block';
+        });
+        
+        canvas.addEventListener('click', (e) => {
+            if (!mouse.dragging) {
+                energyBursts.push(new EnergyBurst(e.clientX, e.clientY));
+                
+                // Energize nearby particles with random colors
+                for (let particle of particles) {
+                    const distance = Vector.sub(particle.position, new Vector(e.clientX, e.clientY)).mag();
+                    if (distance < 200) {
+                        particle.energy = particle.originalEnergy * 4;
+                        particle.hue = Math.random() * 360; // Random color burst
+                    }
+                }
+            }
+        });
+        
+        // Touch support with dragging
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            mouse.x = touch.clientX;
+            mouse.y = touch.clientY;
+            if (mouse.down) {
+                mouse.dragging = true;
+            }
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            mouse.down = true;
+            mouse.dragging = false;
+            mouse.x = touch.clientX;
+            mouse.y = touch.clientY;
+        });
+        
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (!mouse.dragging) {
+                energyBursts.push(new EnergyBurst(mouse.x, mouse.y));
+                
+                // Energize nearby particles with rainbow colors
+                for (let particle of particles) {
+                    const distance = Vector.sub(particle.position, new Vector(mouse.x, mouse.y)).mag();
+                    if (distance < 200) {
+                        particle.energy = particle.originalEnergy * 4;
+                        particle.hue = Math.random() * 360;
+                    }
+                }
+            }
+            
+            mouse.x = -1000;
+            mouse.y = -1000;
+            mouse.down = false;
+            mouse.dragging = false;
+            draggedParticles = [];
+        });
+        
+        // Initialize and start
+        init();
+        animate();
+    </script>
+</body>
+</html>

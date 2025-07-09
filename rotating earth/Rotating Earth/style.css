@@ -1,0 +1,28 @@
+/* Copyright (c) 2025 by Site Studio (https://codepen.io/sitestudioapp/pen/emYLMxX) */
+body { 
+  margin: 0; 
+  overflow: hidden; 
+  background-color: #111111; 
+}
+
+.webgl { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  outline: none; 
+  width: 100%; 
+  height: 100%; 
+}
+
+.globe-still {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: -1;
+	opacity: 0;
+	max-width: none;
+	will-change: transform,opacity;
+}
+
+/* Style from the original div, though opacity might be controlled by JS */
+.webgl { opacity: 1; }

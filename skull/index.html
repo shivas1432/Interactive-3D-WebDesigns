@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="stylesheet" href="style.css">
+   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js"></script>
+   <script defer src="https://assets.codepen.io/127738/MeshSurfaceSampler_20210711.js"></script>
+   <script defer src="https://assets.codepen.io/127738/OBJLoader_20210711.js"></script>
+   <script defer src="https://cdn.jsdelivr.net/npm/three@0.131.3/examples/js/controls/TrackballControls.js"></script>
+   <script defer src="https://cdn.jsdelivr.net/npm/three@0.131.3/examples/js/postprocessing/EffectComposer.js"></script>
+   <script defer src="https://cdn.jsdelivr.net/npm/three@0.131.3/examples/js/postprocessing/RenderPass.js"></script>
+   <script defer src="https://cdn.jsdelivr.net/npm/three@0.131.3/examples/js/postprocessing/UnrealBloomPass.js"></script>
+   <script defer src="https://cdn.jsdelivr.net/npm/three@0.131.3/examples/js/shaders/LuminosityHighPassShader.js"></script>
+   <script defer src="https://cdn.jsdelivr.net/npm/three@0.131.3/examples/js/shaders/CopyShader.js"></script>
+   <script defer src="https://cdn.jsdelivr.net/npm/three@0.131.3/examples/js/postprocessing/ShaderPass.js"></script>
+   <script defer src="https://unpkg.co/gsap@3/dist/gsap.min.js"></script>
+   <script defer src="main.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <script type="x-shader/x-vertex" id="vertexshader">
+        attribute float size;
+        attribute vec3 color;
+        attribute float fade;
+      
+        varying vec3 vColor;
+      
+        void main() {
+          vColor = color;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = size;
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      </script>
+      
+      <script type="x-shader/x-fragment" id="fragmentshader">
+        uniform sampler2D pointTexture;
+        varying vec3 vColor;
+        void main() {
+          gl_FragColor = vec4(vColor, 1.0);
+          gl_FragColor = gl_FragColor * texture2D(pointTexture, gl_PointCoord);
+        }
+      </script>
+      
+</body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Bouncing Ball</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/InertiaPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Draggable.min.js"></script>
+    <style>
+        @import url("https://fonts.googleapis.com/css?family=Montserrat:400,400i,700");
+
+        :root {
+            --ball: url("https://moxopixel.com/assets/img/external/stress-ball-1.png");
+            --color-1: #854ade;
+            --color-2: #62596f;
+            --filter: brightness(1.3);
+        }
+
+        :root:has(#theme [value="2"]:checked) {
+            --ball: url("https://moxopixel.com/assets/img/external/tennis-ball.png");
+            --color-1: #5ea132;
+            --color-2: #465040;
+            --filter: brightness(1);
+        }
+
+        *,
+        *::after,
+        *::before {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Montserrat", "Inter", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-weight: 500;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .backdrop {
+            padding: 0.4rem 0.7rem;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-content: center;
+            justify-content: center;
+            position: relative;
+            z-index: 9999;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .ball {
+            --ball-size: 200px;
+            width: var(--ball-size);
+            height: var(--ball-size);
+            background-image: var(--ball);
+            background-size: cover;
+            background-repeat: no-repeat;
+            border-radius: 50%;
+            will-change: transform;
+            position: absolute;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transform-style: preserve-3d;
+            transform-origin: center center;
+            transform: translateZ(0);
+            filter: var(--filter);
+            cursor: grab;
+        }
+
+        .ball:active {
+            cursor: grabbing;
+        }
+
+        @media (min-height: 800px) {
+            .ball {
+                --ball-size: 260px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .ball {
+                --ball-size: 160px;
+            }
+        }
+
+        .radio-input {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 9999;
+        }
+
+        .radio-input * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+        }
+
+        .radio-input label {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 0px 20px;
+            width: 180px;
+            cursor: pointer;
+            height: 50px;
+            position: relative;
+            user-select: none;
+        }
+
+        .radio-input label::before {
+            position: absolute;
+            content: "";
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 45px;
+            z-index: -1;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-radius: 10px;
+            border: 2px solid transparent;
+        }
+
+        .radio-input label:hover::before {
+            transition: all 0.2s ease;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .radio-input .label:has(input:checked)::before {
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            border-color: var(--color-1);
+            height: 50px;
+        }
+
+        .radio-input .label .text {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .radio-input .label input[type="radio"] {
+            background-color: rgba(255, 255, 255, 0.2);
+            appearance: none;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .radio-input .label input[type="radio"]:checked {
+            background-color: var(--color-1);
+            animation: pulse 0.7s forwards;
+        }
+
+        .radio-input .label input[type="radio"]:before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            transition: all 0.1s cubic-bezier(0.165, 0.84, 0.44, 1);
+            background-color: #fff;
+            transform: scale(0);
+        }
+
+        .radio-input .label input[type="radio"]:checked::before {
+            transform: scale(1);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="radio-input" id="theme">
+        <label class="label">
+            <input type="radio" checked="" name="value-radio" value="1" />
+            <p class="text">Stress Ball</p>
+        </label>
+        <label class="label">
+            <input type="radio" name="value-radio" value="2" />
+            <p class="text">Tennis Ball</p>
+        </label>
+    </div>
+
+    <div class="ball"></div>
+
+    <div class="hint backdrop">Drag and release the ball to make it spin and bounce</div>
+
+    <script>
+        let isCurrentlyDragging = false;
+
+        const friction = -0.5;
+        const ball = document.querySelector(".ball");
+        const ballProps = gsap.getProperty(ball);
+        const radius = ball.getBoundingClientRect().width / 2;
+        const tracker = InertiaPlugin.track(ball, "x,y")[0];
+
+        let vw = window.innerWidth;
+        let vh = window.innerHeight;
+
+        let lastHitEdge = null;
+
+        gsap.defaults({
+            overwrite: true
+        });
+
+        gsap.set(ball, {
+            xPercent: -50,
+            yPercent: -50,
+            x: vw / 2,
+            y: vh / 2,
+            rotation: 0
+        });
+
+        const draggable = new Draggable(ball, {
+            bounds: window,
+            onPress() {
+                gsap.killTweensOf(ball);
+                this.update();
+                isCurrentlyDragging = true;
+            },
+            onRelease() {
+                isCurrentlyDragging = false;
+            },
+            onDragEnd: animateBounce,
+            onDragEndParams: []
+        });
+
+        window.addEventListener("resize", () => {
+            vw = window.innerWidth;
+            vh = window.innerHeight;
+        });
+
+        function animateBounce(x = "+=0", y = "+=0", vx = "auto", vy = "auto") {
+            const velocityX = tracker.get("x");
+            const velocityY = tracker.get("y");
+
+            const velocityMagnitude = Math.sqrt(velocityX ** 2 + velocityY ** 2);
+            const direction = velocityX >= 0 ? 1 : -1;
+            const angularVelocity = direction * velocityMagnitude * 0.25;
+
+            const currentRotation = ballProps("rotation");
+
+            gsap.to(ball, {
+                rotation: currentRotation + angularVelocity,
+                duration: 2,
+                ease: "power2.out",
+                overwrite: false
+            });
+
+            gsap.fromTo(
+                ball,
+                { x, y },
+                {
+                    inertia: {
+                        x: vx,
+                        y: vy
+                    },
+                    onUpdate: checkBounds,
+                    overwrite: false
+                }
+            );
+        }
+
+        function checkBounds() {
+            const r = radius;
+            let x = ballProps("x");
+            let y = ballProps("y");
+            let vx = tracker.get("x");
+            let vy = tracker.get("y");
+            let xPos = x;
+            let yPos = y;
+            let hitEdge = false;
+            let originalVx, originalVy;
+
+            function squash(axis, velocity) {
+                gsap.killTweensOf(ball, "scaleX,scaleY");
+
+                const velocityDivisor = 200;
+                const minImpact = 0.01;
+                const maxImpact = 0.1;
+
+                const absVelocity = Math.abs(velocity);
+                const impact = gsap.utils.clamp(
+                    minImpact,
+                    maxImpact,
+                    absVelocity / velocityDivisor
+                );
+
+                const squashScale = 1 - impact * 0.9;
+                const stretchScale = 1 + impact * 0.6;
+
+                const squashProps =
+                    axis === "x"
+                        ? { scaleX: squashScale, scaleY: stretchScale }
+                        : { scaleX: stretchScale, scaleY: squashScale };
+
+                gsap
+                    .timeline()
+                    .to(ball, {
+                        ...squashProps,
+                        duration: 0.1,
+                        ease: "power2.out",
+                        transformOrigin: "center center",
+                        overwrite: true
+                    })
+                    .to(ball, {
+                        scaleX: 1,
+                        scaleY: 1,
+                        duration: 0.25,
+                        ease: "power2.out",
+                        overwrite: false
+                    });
+            }
+
+            if (x + r > vw) {
+                originalVx = vx;
+                xPos = vw - r;
+                vx *= friction;
+                hitEdge = true;
+                squash("x", originalVx);
+            } else if (x - r < 0) {
+                originalVx = vx;
+                xPos = r;
+                vx *= friction;
+                hitEdge = true;
+                squash("x", originalVx);
+            }
+
+            if (y + r > vh) {
+                originalVy = vy;
+                yPos = vh - r;
+                vy *= friction;
+                hitEdge = true;
+                squash("y", originalVy);
+            } else if (y - r < 0) {
+                originalVy = vy;
+                yPos = r;
+                vy *= friction;
+                hitEdge = true;
+                squash("y", originalVy);
+            }
+
+            if (hitEdge) {
+                animateBounce(xPos, yPos, vx, vy);
+            }
+        }
+
+        document.addEventListener("mouseout", (e) => {
+            if (e.relatedTarget === null && isCurrentlyDragging && draggable.isDragging) {
+                const x = ballProps("x");
+                const y = ballProps("y");
+                const vx = tracker.get("x");
+                const vy = tracker.get("y");
+                
+                const boostFactor = 2.0;
+                
+                draggable.endDrag(e);
+                isCurrentlyDragging = false;
+                
+                animateBounce(x, y, vx * boostFactor, vy * boostFactor);
+            }
+        });
+    </script>
+</body>
+</html>

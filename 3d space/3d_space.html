@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crystal Space Globe - Three.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #canvas_container {
+            width: 100%;
+            height: 100vh;
+        }
+
+        button {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            padding: 0.6rem 1.2em;
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ffff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            transform: translateX(-50%) translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas_container"></div>
+    
+    <script src='https://cdn.jsdelivr.net/npm/three@0.121.1/build/three.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/three@0.121.1/examples/js/controls/OrbitControls.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js'></script>
+    
+    <script>
+        let renderer,
+            scene,
+            camera,
+            sphereBg,
+            nucleus,
+            stars,
+            controls,
+            container = document.getElementById("canvas_container"),
+            timeout_Debounce,
+            noise = new SimplexNoise(),
+            cameraSpeed = 0,
+            crystalFragments = [],
+            energyRings = [];
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x0a0a0a, 200, 1000);
+
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.01, 1000);
+            camera.position.set(0, 0, 230);
+
+            // Enhanced lighting for smooth glowing effects
+            const directionalLight = new THREE.DirectionalLight("#00ccff", 1.5);
+            directionalLight.position.set(50, 50, 50);
+            scene.add(directionalLight);
+
+            const directionalLight2 = new THREE.DirectionalLight("#ff0066", 1);
+            directionalLight2.position.set(-50, -50, -50);
+            scene.add(directionalLight2);
+
+            // Add point lights for better glow
+            const pointLight1 = new THREE.PointLight("#00ffff", 2, 100);
+            pointLight1.position.set(0, 0, 0);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight("#ff0066", 1, 150);
+            pointLight2.position.set(30, 30, 30);
+            scene.add(pointLight2);
+
+            let ambientLight = new THREE.AmbientLight("#001122", 0.3);
+            scene.add(ambientLight);
+
+            renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                alpha: true
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // OrbitControl
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 2;
+            controls.maxDistance = 400;
+            controls.minDistance = 100;
+            controls.enablePan = false;
+
+            // Create crystal nucleus instead of blob
+            createCrystalNucleus();
+            
+            // Create energy rings around nucleus
+            createEnergyRings();
+
+            // Create crystalline background sphere
+            createCrystallineBg();
+
+            // Create particle systems
+            createFloatingCrystals();
+            createEnergyParticles();
+            createNebulaParticles();
+        }
+
+        function createCrystalNucleus() {
+            const group = new THREE.Group();
+            
+            // Main smooth glowing core - high subdivision sphere
+            const coreGeometry = new THREE.SphereGeometry(25, 64, 64);
+            const coreMaterial = new THREE.MeshPhongMaterial({
+                color: 0x00ffff,
+                emissive: 0x0066cc,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.9
+            });
+            const core = new THREE.Mesh(coreGeometry, coreMaterial);
+            group.add(core);
+
+            // Inner glow layer
+            const innerGlowGeometry = new THREE.SphereGeometry(28, 32, 32);
+            const innerGlowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x00aaff,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.BackSide
+            });
+            const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial);
+            group.add(innerGlow);
+
+            // Outer glow layer
+            const outerGlowGeometry = new THREE.SphereGeometry(32, 32, 32);
+            const outerGlowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x0088ff,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial);
+            group.add(outerGlow);
+
+            // Smooth outer shell with subtle wireframe
+            const shellGeometry = new THREE.SphereGeometry(38, 32, 32);
+            const shellMaterial = new THREE.MeshPhongMaterial({
+                color: 0xff0066,
+                emissive: 0x330011,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.2,
+                wireframe: true
+            });
+            const shell = new THREE.Mesh(shellGeometry, shellMaterial);
+            group.add(shell);
+
+            // Smooth orbiting spheres instead of crystal fragments
+            for (let i = 0; i < 8; i++) {
+                const fragmentGeo = new THREE.SphereGeometry(1.5, 16, 16);
+                const fragmentMat = new THREE.MeshPhongMaterial({
+                    color: Math.random() > 0.5 ? 0x00ffff : 0xff0066,
+                    emissive: Math.random() > 0.5 ? 0x002244 : 0x220011,
+                    shininess: 100,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const fragment = new THREE.Mesh(fragmentGeo, fragmentMat);
+                
+                const radius = 45 + Math.random() * 15;
+                fragment.position.setFromSphericalCoords(
+                    radius,
+                    Math.random() * Math.PI,
+                    Math.random() * Math.PI * 2
+                );
+                
+                fragment.userData = {
+                    originalPos: fragment.position.clone(),
+                    rotationSpeed: 0.01 + Math.random() * 0.02,
+                    orbitSpeed: 0.005 + Math.random() * 0.01
+                };
+                
+                crystalFragments.push(fragment);
+                group.add(fragment);
+            }
+
+            nucleus = group;
+            scene.add(nucleus);
+        }
+
+        function createEnergyRings() {
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.RingGeometry(60 + i * 15, 65 + i * 15, 32);
+                const ringMaterial = new THREE.MeshBasicMaterial({
+                    color: i % 2 === 0 ? 0x00ffff : 0xff0066,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                
+                ring.rotation.x = Math.random() * Math.PI;
+                ring.rotation.y = Math.random() * Math.PI;
+                ring.userData = {
+                    rotationSpeedX: 0.001 + Math.random() * 0.002,
+                    rotationSpeedY: 0.001 + Math.random() * 0.002,
+                    rotationSpeedZ: 0.001 + Math.random() * 0.002
+                };
+                
+                energyRings.push(ring);
+                scene.add(ring);
+            }
+        }
+
+        function createCrystallineBg() {
+            const geometry = new THREE.SphereBufferGeometry(150, 64, 64);
+            
+            // Create a smooth glowing background sphere
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x001133,
+                transparent: true,
+                opacity: 0.15,
+                side: THREE.BackSide
+            });
+            sphereBg = new THREE.Mesh(geometry, material);
+            scene.add(sphereBg);
+
+            // Add outer glow layer for the background
+            const glowGeometry = new THREE.SphereBufferGeometry(155, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0x002244,
+                transparent: true,
+                opacity: 0.08,
+                side: THREE.BackSide
+            });
+            const bgGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+            scene.add(bgGlow);
+        }
+
+        function createFloatingCrystals() {
+            const starsGeometry = new THREE.Geometry();
+
+            for (let i = 0; i < 40; i++) {
+                let particle = randomPointSphere(140);
+                particle.velocity = THREE.MathUtils.randInt(30, 150);
+                particle.startX = particle.x;
+                particle.startY = particle.y;
+                particle.startZ = particle.z;
+                starsGeometry.vertices.push(particle);
+            }
+
+            // Create custom shader material for glowing effect
+            const starsMaterial = new THREE.PointsMaterial({
+                size: 8,
+                color: 0x00ffff,
+                transparent: true,
+                opacity: 0.9,
+                blending: THREE.AdditiveBlending,
+            });
+            starsMaterial.depthWrite = false;
+            
+            stars = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(stars);
+        }
+
+        function createEnergyParticles() {
+            // High-energy particles
+            function createParticleSystem(color, size, count, radius) {
+                const geometry = new THREE.Geometry();
+                const material = new THREE.PointsMaterial({
+                    size: size,
+                    color: color,
+                    transparent: true,
+                    opacity: 0.7,
+                    blending: THREE.AdditiveBlending,
+                });
+
+                for (let i = 0; i < count; i++) {
+                    const particle = randomPointSphere(radius);
+                    geometry.vertices.push(particle);
+                }
+                return new THREE.Points(geometry, material);
+            }
+
+            scene.add(createParticleSystem(0x00ffff, 12, 25, 120));
+            scene.add(createParticleSystem(0xff0066, 6, 30, 110));
+            scene.add(createParticleSystem(0xffffff, 4, 40, 130));
+        }
+
+        function createNebulaParticles() {
+            // Distant nebula effect
+            const nebulaGeometry = new THREE.Geometry();
+            for (let i = 0; i < 80; i++) {
+                const particle = randomPointSphere(145);
+                nebulaGeometry.vertices.push(particle);
+            }
+
+            const nebulaMaterial = new THREE.PointsMaterial({
+                size: 3,
+                color: 0x220044,
+                transparent: true,
+                opacity: 0.4,
+                blending: THREE.AdditiveBlending,
+            });
+
+            const nebula = new THREE.Points(nebulaGeometry, nebulaMaterial);
+            scene.add(nebula);
+        }
+
+        function randomPointSphere(radius) {
+            let theta = 2 * Math.PI * Math.random();
+            let phi = Math.acos(2 * Math.random() - 1);
+            let dx = 0 + (radius * Math.sin(phi) * Math.cos(theta));
+            let dy = 0 + (radius * Math.sin(phi) * Math.sin(theta));
+            let dz = 0 + (radius * Math.cos(phi));
+            return new THREE.Vector3(dx, dy, dz);
+        }
+
+        function animate() {
+            const time = Date.now() * 0.001;
+
+            // Animate floating crystals (stars)
+            if (stars) {
+                stars.geometry.vertices.forEach(function (v) {
+                    v.x += (0 - v.x) / v.velocity;
+                    v.y += (0 - v.y) / v.velocity;
+                    v.z += (0 - v.z) / v.velocity;
+
+                    v.velocity -= 0.2;
+
+                    if (v.x <= 3 && v.x >= -3 && v.z <= 3 && v.z >= -3) {
+                        v.x = v.startX;
+                        v.y = v.startY;
+                        v.z = v.startZ;
+                        v.velocity = THREE.MathUtils.randInt(30, 200);
+                    }
+                });
+                stars.geometry.verticesNeedUpdate = true;
+            }
+
+            // Animate crystal nucleus with smooth glowing effects
+            if (nucleus) {
+                nucleus.rotation.y += 0.003;
+                nucleus.rotation.x += 0.001;
+
+                // Pulsing glow effect for the core
+                const coreGlow = 0.5 + Math.sin(time * 2) * 0.3;
+                const core = nucleus.children[0]; // Main core sphere
+                if (core && core.material) {
+                    core.material.emissive.setHex(Math.floor(0x0066cc * coreGlow));
+                }
+
+                // Animate inner glow
+                const innerGlow = nucleus.children[1];
+                if (innerGlow && innerGlow.material) {
+                    innerGlow.material.opacity = 0.2 + Math.sin(time * 3) * 0.1;
+                }
+
+                // Animate outer glow
+                const outerGlow = nucleus.children[2];
+                if (outerGlow && outerGlow.material) {
+                    outerGlow.material.opacity = 0.1 + Math.sin(time * 1.5) * 0.05;
+                }
+
+                // Animate smooth orbiting spheres
+                crystalFragments.forEach((fragment, index) => {
+                    fragment.rotation.x += fragment.userData.rotationSpeed;
+                    fragment.rotation.y += fragment.userData.rotationSpeed * 0.7;
+                    
+                    // Smooth orbital motion with vertical bobbing
+                    const orbitTime = time * fragment.userData.orbitSpeed;
+                    const radius = 45 + Math.sin(time * 2 + index) * 3;
+                    const verticalOffset = Math.sin(time * 1.5 + index * 0.8) * 5;
+                    
+                    fragment.position.setFromSphericalCoords(
+                        radius,
+                        Math.PI * 0.5 + Math.sin(orbitTime + index) * 0.2,
+                        orbitTime + index * 0.8
+                    );
+                    fragment.position.y += verticalOffset;
+
+                    // Pulsing glow for orbiting spheres
+                    if (fragment.material) {
+                        const glowIntensity = 0.7 + Math.sin(time * 4 + index) * 0.3;
+                        fragment.material.opacity = glowIntensity;
+                    }
+                });
+            }
+
+            // Animate energy rings
+            energyRings.forEach(ring => {
+                ring.rotation.x += ring.userData.rotationSpeedX;
+                ring.rotation.y += ring.userData.rotationSpeedY;
+                ring.rotation.z += ring.userData.rotationSpeedZ;
+                
+                // Pulsing effect
+                ring.material.opacity = 0.2 + Math.sin(time * 2) * 0.1;
+            });
+
+            // Animate background
+            if (sphereBg) {
+                sphereBg.rotation.x += 0.001;
+                sphereBg.rotation.y += 0.001;
+                sphereBg.rotation.z += 0.0005;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        // Resize handler
+        window.addEventListener("resize", () => {
+            clearTimeout(timeout_Debounce);
+            timeout_Debounce = setTimeout(onWindowResize, 80);
+        });
+
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quantum Sphere Dynamics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      font-family: 'Orbitron', monospace;
+    }
+
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+
+    /* Animated background pattern */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+      animation: float 20s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    .hero {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .title-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 8rem);
+      font-weight: 900;
+      color: transparent;
+      background: linear-gradient(45deg, #00d4ff, #ff6b9d, #00ff88, #ff9a00);
+      background-size: 400% 400%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      animation: gradientShift 3s ease-in-out infinite;
+      text-shadow: 
+        0 0 30px rgba(0, 212, 255, 0.5),
+        0 0 60px rgba(255, 107, 157, 0.3),
+        0 0 90px rgba(0, 255, 136, 0.2);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.2em;
+    }
+
+    h2 {
+      font-size: clamp(2rem, 5vw, 5rem);
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 
+        0 0 20px rgba(255, 255, 255, 0.5),
+        0 0 40px rgba(0, 212, 255, 0.3);
+      letter-spacing: 0.2em;
+      animation: pulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.8; transform: scale(1); }
+      100% { opacity: 1; transform: scale(1.02); }
+    }
+
+    .subtitle {
+      position: absolute;
+      bottom: -2em;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+      letter-spacing: 0.3em;
+      animation: fadeInOut 4s ease-in-out infinite;
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    #webgl-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      opacity: 0.8;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1rem;
+      z-index: 10;
+    }
+
+    .control-btn {
+      padding: 0.8rem 1.5rem;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .control-btn:hover {
+      background: rgba(0, 212, 255, 0.2);
+      border-color: rgba(0, 212, 255, 0.5);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .control-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Particle overlay effect */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        align-items: center;
+        bottom: 1rem;
+      }
+      
+      .control-btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.2rem;
+      animation: loadingPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes loadingPulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading" id="loading">INITIALIZING QUANTUM FIELD...</div>
+    
+    <div class="hero">
+      <div class="title-container">
+        <h1>QUANTUM</h1>
+        <h2>SPHERES</h2>
+        <div class="subtitle">DYNAMIC FIELD SIMULATION</div>
+      </div>
+    </div>
+    
+    <div class="particles" id="particles"></div>
+    
+    <canvas id="webgl-canvas"></canvas>
+    
+    <div class="controls">
+      <button class="control-btn" id="colors-btn">SHIFT SPECTRUM</button>
+      <button class="control-btn" id="speed-btn">VELOCITY</button>
+      <button class="control-btn" id="reset-btn">RESET FIELD</button>
+    </div>
+  </div>
+
+  <script type="module">
+    // Create particle background
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = 50;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 3 + 's';
+        particle.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    // Enhanced color palettes
+    const colorPalettes = [
+      [0x00d4ff, 0xff6b9d, 0x00ff88], // Cyan, Pink, Green
+      [0xff4757, 0x5352ed, 0x00d2d3], // Red, Blue, Teal  
+      [0xffa502, 0xff6348, 0xff3838], // Orange gradient
+      [0x7bed9f, 0x70a1ff, 0xa4b0be], // Mint, Blue, Gray
+      [0xff9ff3, 0x54a0ff, 0x5f27cd], // Purple gradient
+      [0xff6b6b, 0x4ecdc4, 0x45b7d1], // Coral, Teal, Blue
+      [0xfeca57, 0x48dbfb, 0x0abde3], // Yellow, Light Blue, Blue
+      [0xff9ff3, 0xf368e0, 0xfeca57] // Pink gradient
+    ];
+
+    let currentPaletteIndex = 0;
+    let isHighSpeed = false;
+
+    // Initialize sphere background
+    async function initSphereBackground() {
+      try {
+        const Spheres2Background = (await import('https://cdn.jsdelivr.net/npm/threejs-components@0.0.8/build/backgrounds/spheres2.cdn.min.js')).default;
+        
+        const bg = Spheres2Background(document.getElementById('webgl-canvas'), {
+          count: 250,
+          colors: colorPalettes[0],
+          minSize: 0.3,
+          maxSize: 1.2,
+          speed: 0.5
+        });
+
+        // Hide loading
+        document.getElementById('loading').style.display = 'none';
+
+        // Button event listeners
+        const colorsBtn = document.getElementById('colors-btn');
+        const speedBtn = document.getElementById('speed-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        colorsBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentPaletteIndex = (currentPaletteIndex + 1) % colorPalettes.length;
+          const newPalette = colorPalettes[currentPaletteIndex];
+          
+          bg.spheres.setColors(newPalette);
+          if (bg.spheres.light1) {
+            bg.spheres.light1.color.set(newPalette[Math.floor(Math.random() * newPalette.length)]);
+          }
+          
+          // Visual feedback
+          colorsBtn.style.background = `rgba(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255}, 0.3)`;
+          setTimeout(() => {
+            colorsBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+          }, 200);
+        });
+
+        speedBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          isHighSpeed = !isHighSpeed;
+          speedBtn.textContent = isHighSpeed ? 'SLOW DOWN' : 'ACCELERATE';
+          speedBtn.style.background = isHighSpeed ? 'rgba(255, 107, 157, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+        });
+
+        resetBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentPaletteIndex = 0;
+          isHighSpeed = false;
+          bg.spheres.setColors(colorPalettes[0]);
+          speedBtn.textContent = 'VELOCITY';
+          speedBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+          
+          // Reset animation
+          resetBtn.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            resetBtn.style.transform = 'scale(1)';
+          }, 150);
+        });
+
+        // Canvas click to pause/play
+        document.body.addEventListener('click', (ev) => {
+          if (!ev.target.classList.contains('control-btn')) {
+            bg.togglePause();
+          }
+        });
+
+        return bg;
+      } catch (error) {
+        console.error('Failed to load sphere background:', error);
+        document.getElementById('loading').textContent = 'FALLBACK MODE ACTIVE';
+      }
+    }
+
+    // Initialize everything
+    createParticles();
+    initSphereBackground();
+  </script>
+</body>
+</html>
