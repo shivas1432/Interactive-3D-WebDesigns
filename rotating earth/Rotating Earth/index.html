@@ -70,13 +70,13 @@
         camera.position.z = 15;
         scene.add(camera);
 
-        // --- Controls (Optional) ---
+        // --- Controls ---
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.enablePan = false; // Disable panning if you only want rotation/zoom
+        controls.enablePan = false; 
         controls.minDistance = 7;
         controls.maxDistance = 30;
-        controls.autoRotate = false; // We'll handle rotation manually
+        controls.autoRotate = false; 
         controls.autoRotateSpeed = 0.5;
 
         // --- Lighting ---
