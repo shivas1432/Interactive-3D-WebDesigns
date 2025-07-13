@@ -1,0 +1,19 @@
+/* author: https://codepen.io/Pedro-Ondiviela/pen/XWGVQyY
+Pedro Ondiviela
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap");
+body {
+  margin: 0;
+  cursor: pointer;
+}
+
+.advice {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: white;
+  font-family: "Archivo Black", sans-serif;
+  text-transform: uppercase;
+  user-select: none;
+}
